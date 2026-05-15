@@ -55,6 +55,12 @@ const variables = computed(() => {
   return [...new Set(matches.map((m) => m.replace(/[{}]/g, '').trim()))]
 })
 
+// Built in script so the template never contains a literal "}}" inside an
+// interpolation, which the Vue template parser would close prematurely.
+function varLabel(name: string): string {
+  return '{{' + name + '}}'
+}
+
 async function load() {
   if (isNew.value) return
   try {
@@ -182,7 +188,7 @@ onMounted(load)
         <div class="vars">
           <span class="vars-label">检测到的变量:</span>
           <n-space :size="6">
-            <n-tag v-for="v in variables" :key="v" size="small" type="warning">{{ '{{' + v + '}}' }}</n-tag>
+            <n-tag v-for="v in variables" :key="v" size="small" type="warning">{{ varLabel(v) }}</n-tag>
             <span v-if="!variables.length" class="muted">无</span>
           </n-space>
         </div>
