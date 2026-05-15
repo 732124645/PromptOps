@@ -47,6 +47,8 @@ const envOptions = [
 const versions = ref<PromptVersion[]>([])
 const showVersions = ref(false)
 
+const contentPlaceholder = '你是一个 {{language}} 专家。\n请分析下面代码:\n{{code}}'
+
 // Detected {{variable}} placeholders in the prompt content.
 const variables = computed(() => {
   const matches = (form.value.content || '').match(/{{\s*[\w.]+\s*}}/g) || []
@@ -173,7 +175,7 @@ onMounted(load)
             type="textarea"
             class="mono"
             :autosize="{ minRows: 12, maxRows: 28 }"
-            placeholder="你是一个 {{language}} 专家。请分析下面代码:&#10;{{code}}"
+            :placeholder="contentPlaceholder"
           />
         </n-form-item>
 
