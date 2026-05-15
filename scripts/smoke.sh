@@ -1,0 +1,46 @@
+#!/usr/bin/env bash
+# Starts the built PromptOps server and exercises the core API end-to-end.
+set -euo pipefail
+
+TOKEN="${PROMPTOPS_TOKEN:-promptops-dev-token}"
+BASE="http://localhost:8080"
+
+if [ ! -x server/promptops ]; then
+  echo "server/promptops binary not found — run 'cd server && go build -o promptops .' first"
+  exit 1
+fi
+
+echo "==> starting server"
+./server/promptops &
+SRV=$!
+trap 'kill "$SRV" 2>/dev/null || true' EXIT
+
+for _ in $(seq 1 40); do
+  if curl -sf "$BASE/health" >/dev/null 2>&1; then break; fi
+  sleep 0.5
+done
+curl -sf "$BASE/health" >/dev/null || { echo "FAIL: server did not start"; exit 1; }
+echo "    health OK"
+
+echo "==> login"
+curl -sf -X POST "$BASE/api/login" -H 'Content-Type: application/json' \
+  -d "{\"token\":\"$TOKEN\"}" >/dev/null
+echo "    login OK"
+
+echo "==> create prompt"
+curl -sf -X POST "$BASE/api/prompts" \
+  -H "Authorization: Bearer $TOKEN" -H 'Content-Type: application/json' \
+  -d '{"key":"smoke.test","name":"Smoke","content":"hello {{name}}","env":"prod","model":"gpt-4o"}' >/dev/null
+echo "    create OK"
+
+echo "==> SDK fetch"
+OUT="$(curl -sf "$BASE/api/sdk/prompts/smoke.test?env=prod" -H "Authorization: Bearer $TOKEN")"
+echo "    response: $OUT"
+echo "$OUT" | grep -q 'hello {{name}}' || { echo "FAIL: SDK content mismatch"; exit 1; }
+
+echo "==> unauthorized request is rejected"
+CODE="$(curl -s -o /dev/null -w '%{http_code}' "$BASE/api/prompts" -H 'Authorization: Bearer wrong')"
+[ "$CODE" = "401" ] || { echo "FAIL: expected 401, got $CODE"; exit 1; }
+echo "    auth OK"
+
+echo "==> smoke test passed"
