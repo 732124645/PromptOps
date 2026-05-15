@@ -8,6 +8,7 @@ const router = createRouter({
     { path: '/', name: 'prompts', component: () => import('../views/PromptListView.vue') },
     { path: '/prompts/new', name: 'prompt-new', component: () => import('../views/PromptEditView.vue') },
     { path: '/prompts/:id', name: 'prompt-edit', component: () => import('../views/PromptEditView.vue') },
+    { path: '/playground', name: 'playground', component: () => import('../views/PlaygroundView.vue') },
   ],
 })
 

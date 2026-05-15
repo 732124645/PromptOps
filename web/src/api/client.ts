@@ -26,6 +26,25 @@ export interface PromptVersion {
   created_at: string
 }
 
+export interface PlaygroundRequest {
+  id?: string
+  content?: string
+  variables?: Record<string, string>
+  provider: string
+  model?: string
+  api_key?: string
+  base_url?: string
+}
+
+export interface PlaygroundResponse {
+  rendered: string
+  result: {
+    provider: string
+    model: string
+    output: string
+  }
+}
+
 const http = axios.create({ baseURL: '/api' })
 
 http.interceptors.request.use((config) => {
@@ -57,6 +76,9 @@ export const api = {
   versions: (id: string) => http.get<{ data: PromptVersion[] }>(`/prompts/${id}/versions`),
   publish: (id: string) => http.post('/prompts/publish', { id }),
   rollback: (id: string, version: string) => http.post('/prompts/rollback', { id, version }),
+  providers: () => http.get<{ data: string[] }>('/playground/providers'),
+  runPlayground: (payload: PlaygroundRequest) =>
+    http.post<PlaygroundResponse>('/playground/run', payload),
 }
 
 export default http

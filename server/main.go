@@ -43,6 +43,8 @@ func main() {
 		api.DELETE("/prompts/:id", h.DeletePrompt)
 		api.GET("/prompts/:id/versions", h.ListVersions)
 		api.GET("/sdk/prompts/:key", h.SDKGetPrompt)
+		api.POST("/playground/run", h.RunPlayground)
+		api.GET("/playground/providers", h.ListProviders)
 	}
 
 	// Serve the built Web UI if present (production single-binary mode).

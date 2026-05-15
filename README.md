@@ -10,14 +10,15 @@ Workflow 从代码中解耦出来,让 AI 应用支持 Prompt 的热更新、版�
 
 ## 当前进度
 
-第一阶段 MVP + 第二阶段 SDK / 热更新已完成。
+第一阶段 MVP、第二阶段 SDK / 热更新、第三阶段 Playground 均已完成。
 
 | 模块 | 技术栈 | 说明 |
 |---|---|---|
 | 后端 | Go + Gin + GORM + SQLite | Prompt CRUD / 搜索 / 版本管理 / 多环境 / SDK 接口 |
 | 热更新 | WebSocket (`/ws`) | Prompt 变更实时推送给已连接客户端 |
-| 前端 | Vue3 + Vite + Naive UI + Pinia | 登录页 / Prompt 列表页 / Prompt 编辑页 |
+| 前端 | Vue3 + Vite + Naive UI + Pinia | 登录页 / Prompt 列表页 / Prompt 编辑页 / Playground |
 | SDK | Node / Python / Java(均零依赖) | 按 key 获取 Prompt、模板渲染、WebSocket 热更新 |
+| Playground | 模型网关(mock / OpenAI / Claude / Ollama / Gemini) | 填变量、调用模型、查看结果;版本 Diff 对比 |
 
 ## 项目结构
 
@@ -73,6 +74,8 @@ docker compose up --build   # 构建前端 + 后端,访问 http://localhost:8080
 | POST | `/api/prompts/publish` | 发布(快照当前内容为版本) |
 | POST | `/api/prompts/rollback` | 回滚到指定版本 |
 | GET | `/api/sdk/prompts/:key?env=` | SDK 运行时按 key 获取 Prompt |
+| POST | `/api/playground/run` | 渲染 Prompt 并调用模型提供方 |
+| GET | `/api/playground/providers` | 列出可用模型提供方 |
 | GET | `/ws` | WebSocket 热更新事件流 |
 
 除 `/api/login`、`/ws`、`/health` 外,所有 `/api/*` 需要

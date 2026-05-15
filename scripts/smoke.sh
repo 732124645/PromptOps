@@ -43,4 +43,12 @@ CODE="$(curl -s -o /dev/null -w '%{http_code}' "$BASE/api/prompts" -H 'Authoriza
 [ "$CODE" = "401" ] || { echo "FAIL: expected 401, got $CODE"; exit 1; }
 echo "    auth OK"
 
+echo "==> playground run (mock provider)"
+PG="$(curl -sf -X POST "$BASE/api/playground/run" \
+  -H "Authorization: Bearer $TOKEN" -H 'Content-Type: application/json' \
+  -d '{"content":"Hi {{who}}","variables":{"who":"world"},"provider":"mock"}')"
+echo "    response: $PG"
+echo "$PG" | grep -q 'Hi world' || { echo "FAIL: playground did not render variables"; exit 1; }
+echo "$PG" | grep -q 'mock completion' || { echo "FAIL: playground output mismatch"; exit 1; }
+
 echo "==> smoke test passed"

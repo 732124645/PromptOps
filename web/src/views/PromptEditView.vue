@@ -18,6 +18,7 @@ import {
   useMessage,
 } from 'naive-ui'
 import { api, type Prompt, type PromptVersion } from '../api/client'
+import { lineDiff, type DiffLine } from '../utils/diff'
 
 const route = useRoute()
 const router = useRouter()
@@ -46,6 +47,16 @@ const envOptions = [
 
 const versions = ref<PromptVersion[]>([])
 const showVersions = ref(false)
+
+const showDiff = ref(false)
+const diffVersion = ref('')
+const diffLines = ref<DiffLine[]>([])
+
+function openDiff(v: PromptVersion) {
+  diffVersion.value = v.version
+  diffLines.value = lineDiff(v.content, form.value.content || '')
+  showDiff.value = true
+}
 
 const contentPlaceholder = '你是一个 {{language}} 专家。\n请分析下面代码:\n{{code}}'
 
@@ -218,10 +229,29 @@ onMounted(load)
             <td>{{ v.env }}</td>
             <td>{{ new Date(v.created_at).toLocaleString() }}</td>
             <td class="preview">{{ v.content.slice(0, 60) }}{{ v.content.length > 60 ? '…' : '' }}</td>
-            <td><n-button size="tiny" @click="rollback(v)">回滚到此版本</n-button></td>
+            <td>
+              <n-space :size="4">
+                <n-button size="tiny" @click="openDiff(v)">对比当前</n-button>
+                <n-button size="tiny" type="primary" ghost @click="rollback(v)">回滚</n-button>
+              </n-space>
+            </td>
           </tr>
         </tbody>
       </n-table>
+    </n-modal>
+
+    <n-modal
+      v-model:show="showDiff"
+      preset="card"
+      :title="`Diff · ${diffVersion} → 当前`"
+      style="width: 760px"
+    >
+      <div class="diff-legend">
+        <span class="del">− 版本 {{ diffVersion }}</span>
+        <span class="add">+ 当前内容</span>
+      </div>
+      <n-empty v-if="!diffLines.length" description="无内容" />
+      <pre v-else class="diff"><span v-for="(line, i) in diffLines" :key="i" :class="['diff-line', line.type]">{{ line.type === 'add' ? '+ ' : line.type === 'del' ? '− ' : '  ' }}{{ line.text }}</span></pre>
     </n-modal>
   </div>
 </template>
@@ -251,5 +281,43 @@ onMounted(load)
   font-family: 'SF Mono', Menlo, Consolas, monospace;
   font-size: 12px;
   color: #aaa;
+}
+.diff-legend {
+  display: flex;
+  gap: 16px;
+  font-size: 12px;
+  margin-bottom: 8px;
+}
+.diff-legend .del {
+  color: #e88080;
+}
+.diff-legend .add {
+  color: #63e2b7;
+}
+.diff {
+  margin: 0;
+  max-height: 60vh;
+  overflow: auto;
+  border-radius: 6px;
+  background: rgba(255, 255, 255, 0.04);
+  font-family: 'SF Mono', Menlo, Consolas, monospace;
+  font-size: 12.5px;
+}
+.diff-line {
+  display: block;
+  padding: 0 10px;
+  white-space: pre-wrap;
+  word-break: break-word;
+}
+.diff-line.add {
+  background: rgba(99, 226, 183, 0.14);
+  color: #9ff0d3;
+}
+.diff-line.del {
+  background: rgba(232, 128, 128, 0.14);
+  color: #f0a8a8;
+}
+.diff-line.same {
+  color: #999;
 }
 </style>

@@ -10,6 +10,12 @@ const auth = useAuthStore()
 
 const showHeader = computed(() => route.name !== 'login')
 
+function isActive(section: 'prompts' | 'playground') {
+  const name = String(route.name || '')
+  if (section === 'playground') return name === 'playground'
+  return ['prompts', 'prompt-new', 'prompt-edit'].includes(name)
+}
+
 function logout() {
   auth.clear()
   router.push({ name: 'login' })
@@ -19,9 +25,17 @@ function logout() {
 <template>
   <n-layout style="height: 100vh">
     <n-layout-header v-if="showHeader" bordered class="header">
-      <div class="brand" @click="router.push('/')">
-        PromptOps
-        <span class="tag">Runtime</span>
+      <div class="left">
+        <div class="brand" @click="router.push('/')">
+          PromptOps
+          <span class="tag">Runtime</span>
+        </div>
+        <nav class="nav">
+          <a :class="{ active: isActive('prompts') }" @click="router.push('/')">Prompts</a>
+          <a :class="{ active: isActive('playground') }" @click="router.push('/playground')">
+            Playground
+          </a>
+        </nav>
       </div>
       <n-button quaternary size="small" @click="logout">退出登录</n-button>
     </n-layout-header>
@@ -39,10 +53,31 @@ function logout() {
   height: 56px;
   padding: 0 24px;
 }
+.left {
+  display: flex;
+  align-items: center;
+  gap: 28px;
+}
 .brand {
   font-weight: 700;
   font-size: 18px;
   cursor: pointer;
+}
+.nav {
+  display: flex;
+  gap: 18px;
+}
+.nav a {
+  cursor: pointer;
+  font-size: 14px;
+  color: #999;
+  transition: color 0.15s;
+}
+.nav a:hover {
+  color: #fff;
+}
+.nav a.active {
+  color: #63e2b7;
 }
 .tag {
   font-size: 11px;

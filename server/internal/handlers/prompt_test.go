@@ -37,6 +37,8 @@ func newTestRouter(t *testing.T) *gin.Engine {
 		api.DELETE("/prompts/:id", h.DeletePrompt)
 		api.GET("/prompts/:id/versions", h.ListVersions)
 		api.GET("/sdk/prompts/:key", h.SDKGetPrompt)
+		api.POST("/playground/run", h.RunPlayground)
+		api.GET("/playground/providers", h.ListProviders)
 	}
 	return r
 }
