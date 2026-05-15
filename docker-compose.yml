@@ -1,0 +1,10 @@
+services:
+  promptops:
+    build: .
+    ports:
+      - "8080:8080"
+    environment:
+      - PROMPTOPS_TOKEN=promptops-dev-token
+      - PROMPTOPS_DB=/app/data/promptops.db
+    volumes:
+      - ./data:/app/data

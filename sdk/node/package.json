@@ -1,0 +1,16 @@
+{
+  "name": "@promptops/client",
+  "version": "0.1.0",
+  "description": "PromptOps Node SDK — fetch prompts with WebSocket hot-reload. Zero dependencies.",
+  "type": "module",
+  "main": "src/index.js",
+  "types": "index.d.ts",
+  "files": ["src", "index.d.ts"],
+  "scripts": {
+    "test": "node --test"
+  },
+  "engines": {
+    "node": ">=22"
+  },
+  "license": "MIT"
+}
