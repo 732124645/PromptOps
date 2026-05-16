@@ -229,11 +229,34 @@ func (h *Handler) SDKGetPrompt(c *gin.Context) {
 		c.JSON(http.StatusNotFound, gin.H{"error": "not found"})
 		return
 	}
-	c.JSON(http.StatusOK, gin.H{
+
+	content := p.Content
+	version := p.Version
+	variant := ""
+
+	// Apply a gray-release rollout: weighted pick between two published versions.
+	var ro models.Rollout
+	if err := h.db.Where("key = ? AND env = ? AND enabled = ?", key, env, true).
+		First(&ro).Error; err == nil {
+		picked, label := pickVariant(ro)
+		var pv models.PromptVersion
+		if err := h.db.Where("key = ? AND env = ? AND version = ?", key, env, picked).
+			Order("created_at desc").First(&pv).Error; err == nil {
+			content = pv.Content
+			version = pv.Version
+			variant = label
+		}
+	}
+
+	resp := gin.H{
 		"key":     p.Key,
-		"version": p.Version,
+		"version": version,
 		"env":     p.Env,
 		"model":   p.Model,
-		"content": p.Content,
-	})
+		"content": content,
+	}
+	if variant != "" {
+		resp["variant"] = variant
+	}
+	c.JSON(http.StatusOK, resp)
 }

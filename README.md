@@ -23,6 +23,7 @@ MVP、SDK / 热更新、Playground、Agent / Workflow 运行时、可观测性�
 | Workflow | 步骤引擎(render → model → transform) | 编排多步流程,串联输出,查看逐步轨迹 |
 | 可观测性 | 审计日志 + 运行日志 + Token 统计 | 记录所有变更与模型调用,聚合运行指标 |
 | 权限 (RBAC) | 用户 / 角色 / 会话(PBKDF2 口令) | admin / editor / viewer 三级角色,按角色控制接口 |
+| 灰度发布 | Rollout(按 key + 环境的 AB 流量切分) | SDK 获取 Prompt 时按权重返回两个版本之一 |
 
 ## 项目结构
 
@@ -80,6 +81,7 @@ docker compose up --build   # 构建前端 + 后端,访问 http://localhost:8080
 | GET | `/api/prompts/:id/versions` | 版本历史 |
 | POST | `/api/prompts/publish` | 发布(快照当前内容为版本) |
 | POST | `/api/prompts/rollback` | 回滚到指定版本 |
+| GET/PUT/DELETE | `/api/prompts/:id/rollout` | 灰度发布(AB)配置 |
 | GET | `/api/sdk/prompts/:key?env=` | SDK 运行时按 key 获取 Prompt |
 | POST | `/api/playground/run` | 渲染 Prompt 并调用模型提供方 |
 | GET | `/api/playground/providers` | 列出可用模型提供方 |

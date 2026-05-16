@@ -53,6 +53,19 @@ type Workflow struct {
 	UpdatedAt   time.Time `json:"updated_at"`
 }
 
+// Rollout splits SDK traffic for a prompt key+env between two versions.
+type Rollout struct {
+	ID        string    `gorm:"primaryKey" json:"id"`
+	Key       string    `gorm:"index" json:"key"`
+	Env       string    `gorm:"index" json:"env"`
+	Enabled   bool      `json:"enabled"`
+	VariantA  string    `json:"variant_a"`
+	VariantB  string    `json:"variant_b"`
+	WeightA   int       `json:"weight_a"`
+	CreatedAt time.Time `json:"created_at"`
+	UpdatedAt time.Time `json:"updated_at"`
+}
+
 // AuditLog records a mutation to a prompt, agent or workflow.
 type AuditLog struct {
 	ID         string    `gorm:"primaryKey" json:"id"`

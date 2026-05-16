@@ -4,6 +4,7 @@ import { useRoute, useRouter } from 'vue-router'
 import {
   NButton,
   NInput,
+  NInputNumber,
   NSelect,
   NSpace,
   NCard,
@@ -13,6 +14,7 @@ import {
   NGridItem,
   NTag,
   NModal,
+  NSwitch,
   NTable,
   NEmpty,
   useMessage,
@@ -72,13 +74,37 @@ function varLabel(name: string): string {
   return '{{' + name + '}}'
 }
 
+const rollout = ref({ enabled: false, variant_a: '', variant_b: '', weight_a: 50 })
+
 async function load() {
   if (isNew.value) return
   try {
     const { data } = await api.get(id.value)
     form.value = data.data
+    const r = await api.getRollout(id.value)
+    if (r.data.data) {
+      rollout.value = {
+        enabled: r.data.data.enabled,
+        variant_a: r.data.data.variant_a,
+        variant_b: r.data.data.variant_b,
+        weight_a: r.data.data.weight_a,
+      }
+    }
   } catch {
     message.error('加载失败')
+  }
+}
+
+async function saveRollout() {
+  if (isNew.value) {
+    message.warning('请先保存 Prompt')
+    return
+  }
+  try {
+    await api.setRollout(id.value, rollout.value)
+    message.success('灰度配置已保存')
+  } catch {
+    message.error('保存灰度配置失败')
   }
 }
 
@@ -204,6 +230,39 @@ onMounted(load)
           </n-space>
         </div>
       </n-form>
+    </n-card>
+
+    <n-card title="灰度发布 (AB)" :bordered="true" style="margin-top: 16px">
+      <p v-if="isNew" class="muted">请先保存 Prompt 再配置灰度发布。</p>
+      <template v-else>
+        <n-form>
+          <n-form-item label="启用灰度">
+            <n-switch v-model:value="rollout.enabled" />
+          </n-form-item>
+          <n-grid :cols="3" :x-gap="16">
+            <n-grid-item>
+              <n-form-item label="变体 A 版本">
+                <n-input v-model:value="rollout.variant_a" placeholder="例: v1" />
+              </n-form-item>
+            </n-grid-item>
+            <n-grid-item>
+              <n-form-item label="变体 B 版本">
+                <n-input v-model:value="rollout.variant_b" placeholder="例: v2" />
+              </n-form-item>
+            </n-grid-item>
+            <n-grid-item>
+              <n-form-item label="A 流量占比 (%)">
+                <n-input-number v-model:value="rollout.weight_a" :min="0" :max="100" />
+              </n-form-item>
+            </n-grid-item>
+          </n-grid>
+          <p class="muted">
+            启用后,SDK 按 key + 环境获取该 Prompt 时,会按占比返回变体 A / B
+            对应已发布版本的内容(变体版本需先在版本历史中发布)。
+          </p>
+          <n-button type="primary" @click="saveRollout">保存灰度配置</n-button>
+        </n-form>
+      </template>
     </n-card>
 
     <n-modal

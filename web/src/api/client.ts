@@ -124,6 +124,16 @@ export interface User {
   created_at: string
 }
 
+export interface Rollout {
+  id: string
+  key: string
+  env: string
+  enabled: boolean
+  variant_a: string
+  variant_b: string
+  weight_a: number
+}
+
 export interface LoginResponse {
   ok: boolean
   token: string
@@ -171,6 +181,12 @@ export const api = {
   versions: (id: string) => http.get<{ data: PromptVersion[] }>(`/prompts/${id}/versions`),
   publish: (id: string) => http.post('/prompts/publish', { id }),
   rollback: (id: string, version: string) => http.post('/prompts/rollback', { id, version }),
+  getRollout: (id: string) => http.get<{ data: Rollout | null }>(`/prompts/${id}/rollout`),
+  setRollout: (
+    id: string,
+    payload: { enabled: boolean; variant_a: string; variant_b: string; weight_a: number },
+  ) => http.put<{ data: Rollout }>(`/prompts/${id}/rollout`, payload),
+  deleteRollout: (id: string) => http.delete(`/prompts/${id}/rollout`),
   providers: () => http.get<{ data: string[] }>('/playground/providers'),
   runPlayground: (payload: PlaygroundRequest) =>
     http.post<PlaygroundResponse>('/playground/run', payload),
