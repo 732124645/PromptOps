@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import { ref, computed, onMounted } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
+import { useI18n } from 'vue-i18n'
 import {
   NButton,
   NInput,
@@ -27,6 +28,7 @@ const route = useRoute()
 const router = useRouter()
 const message = useMessage()
 const workspace = useWorkspaceStore()
+const { t, locale } = useI18n()
 
 const isNew = computed(() => !route.params.id)
 const id = ref<string>((route.params.id as string) || '')
@@ -62,7 +64,13 @@ function openDiff(v: PromptVersion) {
   showDiff.value = true
 }
 
-const contentPlaceholder = '你是一个 {{language}} 专家。\n请分析下面代码:\n{{code}}'
+// Example text kept out of the i18n catalog: vue-i18n would try to compile
+// the {{variable}} braces as nested placeholders and throw.
+const contentPlaceholder = computed(() =>
+  locale.value === 'en'
+    ? 'You are a {{language}} expert.\nPlease review the code below:\n{{code}}'
+    : '你是一个 {{language}} 专家。\n请分析下面代码:\n{{code}}',
+)
 
 // Detected {{variable}} placeholders in the prompt content.
 const variables = computed(() => {
@@ -93,26 +101,26 @@ async function load() {
       }
     }
   } catch {
-    message.error('加载失败')
+    message.error(t('common.loadFailed'))
   }
 }
 
 async function saveRollout() {
   if (isNew.value) {
-    message.warning('请先保存 Prompt')
+    message.warning(t('common.saveFirst', { name: t('entity.prompt') }))
     return
   }
   try {
     await api.setRollout(id.value, rollout.value)
-    message.success('灰度配置已保存')
+    message.success(t('prompt.rolloutSaved'))
   } catch {
-    message.error('保存灰度配置失败')
+    message.error(t('prompt.rolloutSaveFailed'))
   }
 }
 
 async function save() {
   if (!form.value.key) {
-    message.warning('Key 不能为空')
+    message.warning(t('common.keyRequired'))
     return
   }
   saving.value = true
@@ -123,14 +131,14 @@ async function save() {
         workspace_id: workspace.currentId,
       })
       id.value = data.data.id
-      message.success('已创建')
+      message.success(t('common.created'))
       router.replace({ name: 'prompt-edit', params: { id: id.value } })
     } else {
       await api.update(id.value, form.value)
-      message.success('已保存')
+      message.success(t('common.saved'))
     }
   } catch {
-    message.error('保存失败')
+    message.error(t('common.saveFailed'))
   } finally {
     saving.value = false
   }
@@ -138,16 +146,16 @@ async function save() {
 
 async function publish() {
   if (isNew.value) {
-    message.warning('请先保存 Prompt')
+    message.warning(t('common.saveFirst', { name: t('entity.prompt') }))
     return
   }
   await api.publish(id.value)
-  message.success(`已发布版本 ${form.value.version}`)
+  message.success(t('prompt.published', { version: form.value.version }))
 }
 
 async function openVersions() {
   if (isNew.value) {
-    message.warning('请先保存 Prompt')
+    message.warning(t('common.saveFirst', { name: t('entity.prompt') }))
     return
   }
   const { data } = await api.versions(id.value)
@@ -157,7 +165,7 @@ async function openVersions() {
 
 async function rollback(v: PromptVersion) {
   await api.rollback(id.value, v.version)
-  message.success(`已回滚到 ${v.version}`)
+  message.success(t('prompt.rolledBack', { version: v.version }))
   showVersions.value = false
   load()
 }
@@ -168,12 +176,12 @@ onMounted(load)
 <template>
   <div class="page">
     <div class="toolbar">
-      <h2>{{ isNew ? '新建 Prompt' : `编辑: ${form.key}` }}</h2>
+      <h2>{{ isNew ? t('prompt.newTitle') : t('prompt.editTitle', { key: form.key }) }}</h2>
       <n-space>
-        <n-button @click="router.push('/')">返回</n-button>
-        <n-button v-if="!isNew" @click="openVersions">版本历史</n-button>
-        <n-button v-if="!isNew" @click="publish">发布版本</n-button>
-        <n-button type="primary" :loading="saving" @click="save">保存</n-button>
+        <n-button @click="router.push('/')">{{ t('common.back') }}</n-button>
+        <n-button v-if="!isNew" @click="openVersions">{{ t('prompt.versionHistory') }}</n-button>
+        <n-button v-if="!isNew" @click="publish">{{ t('prompt.publish') }}</n-button>
+        <n-button type="primary" :loading="saving" @click="save">{{ t('common.save') }}</n-button>
       </n-space>
     </div>
 
@@ -181,43 +189,46 @@ onMounted(load)
       <n-form>
         <n-grid :cols="2" :x-gap="16">
           <n-grid-item>
-            <n-form-item label="Key (例: code.review)">
+            <n-form-item :label="t('prompt.keyLabel')">
               <n-input v-model:value="form.key" :disabled="!isNew" placeholder="code.review" />
             </n-form-item>
           </n-grid-item>
           <n-grid-item>
-            <n-form-item label="名称">
-              <n-input v-model:value="form.name" placeholder="Prompt 名称" />
+            <n-form-item :label="t('common.name')">
+              <n-input v-model:value="form.name" :placeholder="t('prompt.namePlaceholder')" />
             </n-form-item>
           </n-grid-item>
           <n-grid-item>
-            <n-form-item label="环境">
+            <n-form-item :label="t('common.env')">
               <n-select v-model:value="form.env" :options="envOptions" />
             </n-form-item>
           </n-grid-item>
           <n-grid-item>
-            <n-form-item label="版本">
+            <n-form-item :label="t('common.version')">
               <n-input v-model:value="form.version" placeholder="v1" />
             </n-form-item>
           </n-grid-item>
           <n-grid-item>
-            <n-form-item label="分类">
-              <n-input v-model:value="form.category" placeholder="例: code" />
+            <n-form-item :label="t('prompt.colCategory')">
+              <n-input
+                v-model:value="form.category"
+                :placeholder="t('prompt.categoryPlaceholder')"
+              />
             </n-form-item>
           </n-grid-item>
           <n-grid-item>
-            <n-form-item label="模型">
+            <n-form-item :label="t('common.model')">
               <n-input v-model:value="form.model" placeholder="gpt-4o" />
             </n-form-item>
           </n-grid-item>
           <n-grid-item :span="2">
-            <n-form-item label="标签 (逗号分隔)">
+            <n-form-item :label="t('prompt.tagsLabel')">
               <n-input v-model:value="form.tags" placeholder="review, sql" />
             </n-form-item>
           </n-grid-item>
         </n-grid>
 
-        <n-form-item label="Prompt 内容">
+        <n-form-item :label="t('prompt.contentLabel')">
           <n-input
             v-model:value="form.content"
             type="textarea"
@@ -228,44 +239,43 @@ onMounted(load)
         </n-form-item>
 
         <div class="vars">
-          <span class="vars-label">检测到的变量:</span>
+          <span class="vars-label">{{ t('prompt.detectedVars') }}</span>
           <n-space :size="6">
-            <n-tag v-for="v in variables" :key="v" size="small" type="warning">{{ varLabel(v) }}</n-tag>
-            <span v-if="!variables.length" class="muted">无</span>
+            <n-tag v-for="v in variables" :key="v" size="small" type="warning">
+              {{ varLabel(v) }}
+            </n-tag>
+            <span v-if="!variables.length" class="muted">{{ t('common.none') }}</span>
           </n-space>
         </div>
       </n-form>
     </n-card>
 
-    <n-card title="灰度发布 (AB)" :bordered="true" style="margin-top: 16px">
-      <p v-if="isNew" class="muted">请先保存 Prompt 再配置灰度发布。</p>
+    <n-card :title="t('prompt.rolloutTitle')" :bordered="true" style="margin-top: 16px">
+      <p v-if="isNew" class="muted">{{ t('prompt.rolloutSaveFirst') }}</p>
       <template v-else>
         <n-form>
-          <n-form-item label="启用灰度">
+          <n-form-item :label="t('prompt.rolloutEnable')">
             <n-switch v-model:value="rollout.enabled" />
           </n-form-item>
           <n-grid :cols="3" :x-gap="16">
             <n-grid-item>
-              <n-form-item label="变体 A 版本">
-                <n-input v-model:value="rollout.variant_a" placeholder="例: v1" />
+              <n-form-item :label="t('prompt.variantAVersion')">
+                <n-input v-model:value="rollout.variant_a" placeholder="v1" />
               </n-form-item>
             </n-grid-item>
             <n-grid-item>
-              <n-form-item label="变体 B 版本">
-                <n-input v-model:value="rollout.variant_b" placeholder="例: v2" />
+              <n-form-item :label="t('prompt.variantBVersion')">
+                <n-input v-model:value="rollout.variant_b" placeholder="v2" />
               </n-form-item>
             </n-grid-item>
             <n-grid-item>
-              <n-form-item label="A 流量占比 (%)">
+              <n-form-item :label="t('prompt.weightA')">
                 <n-input-number v-model:value="rollout.weight_a" :min="0" :max="100" />
               </n-form-item>
             </n-grid-item>
           </n-grid>
-          <p class="muted">
-            启用后,SDK 按 key + 环境获取该 Prompt 时,会按占比返回变体 A / B
-            对应已发布版本的内容(变体版本需先在版本历史中发布)。
-          </p>
-          <n-button type="primary" @click="saveRollout">保存灰度配置</n-button>
+          <p class="muted">{{ t('prompt.rolloutHint') }}</p>
+          <n-button type="primary" @click="saveRollout">{{ t('prompt.saveRollout') }}</n-button>
         </n-form>
       </template>
     </n-card>
@@ -273,18 +283,18 @@ onMounted(load)
     <n-modal
       v-model:show="showVersions"
       preset="card"
-      title="版本历史"
+      :title="t('prompt.versionHistory')"
       style="width: 720px"
     >
-      <n-empty v-if="!versions.length" description="暂无已发布版本" />
+      <n-empty v-if="!versions.length" :description="t('prompt.noVersions')" />
       <n-table v-else :bordered="false" :single-line="false">
         <thead>
           <tr>
-            <th>版本</th>
-            <th>环境</th>
-            <th>发布时间</th>
-            <th>内容预览</th>
-            <th>操作</th>
+            <th>{{ t('common.version') }}</th>
+            <th>{{ t('common.env') }}</th>
+            <th>{{ t('prompt.colPublishedAt') }}</th>
+            <th>{{ t('prompt.colPreview') }}</th>
+            <th>{{ t('common.actions') }}</th>
           </tr>
         </thead>
         <tbody>
@@ -292,11 +302,15 @@ onMounted(load)
             <td><n-tag size="small">{{ v.version }}</n-tag></td>
             <td>{{ v.env }}</td>
             <td>{{ new Date(v.created_at).toLocaleString() }}</td>
-            <td class="preview">{{ v.content.slice(0, 60) }}{{ v.content.length > 60 ? '…' : '' }}</td>
+            <td class="preview">
+              {{ v.content.slice(0, 60) }}{{ v.content.length > 60 ? '…' : '' }}
+            </td>
             <td>
               <n-space :size="4">
-                <n-button size="tiny" @click="openDiff(v)">对比当前</n-button>
-                <n-button size="tiny" type="primary" ghost @click="rollback(v)">回滚</n-button>
+                <n-button size="tiny" @click="openDiff(v)">{{ t('prompt.diffCurrent') }}</n-button>
+                <n-button size="tiny" type="primary" ghost @click="rollback(v)">
+                  {{ t('prompt.rollback') }}
+                </n-button>
               </n-space>
             </td>
           </tr>
@@ -307,14 +321,14 @@ onMounted(load)
     <n-modal
       v-model:show="showDiff"
       preset="card"
-      :title="`Diff · ${diffVersion} → 当前`"
+      :title="t('prompt.diffTitle', { version: diffVersion })"
       style="width: 760px"
     >
       <div class="diff-legend">
-        <span class="del">− 版本 {{ diffVersion }}</span>
-        <span class="add">+ 当前内容</span>
+        <span class="del">{{ t('prompt.diffOld', { version: diffVersion }) }}</span>
+        <span class="add">{{ t('prompt.diffNew') }}</span>
       </div>
-      <n-empty v-if="!diffLines.length" description="无内容" />
+      <n-empty v-if="!diffLines.length" :description="t('prompt.diffEmpty')" />
       <pre v-else class="diff"><span v-for="(line, i) in diffLines" :key="i" :class="['diff-line', line.type]">{{ line.type === 'add' ? '+ ' : line.type === 'del' ? '− ' : '  ' }}{{ line.text }}</span></pre>
     </n-modal>
   </div>

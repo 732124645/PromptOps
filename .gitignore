@@ -1,7 +1,51 @@
+# --- Runtime data ---
 /data/
 *.db
-.DS_Store
+*.db-journal
+*.db-wal
+*.db-shm
+
+# --- Logs & env ---
+*.log
+.env
+.env.*
+!.env.example
+
+# --- Node / frontend (web, website, sdk/node) ---
+node_modules/
+dist/
+.vite/
+*.local
+website/.vitepress/dist/
+website/.vitepress/cache/
+
+# --- Go backend ---
+server/server
+server/server.exe
+server/promptops
+server/promptops.exe
+*.test
+*.out
+
+# --- Python SDK ---
 __pycache__/
 *.pyc
-*.class
+*.pyo
+.venv/
+venv/
+*.egg-info/
+.pytest_cache/
+
+# --- Java SDK ---
 sdk/java/out/
+*.class
+*.jar
+
+# --- Editors / IDE ---
+.vscode/
+.idea/
+*.swp
+
+# --- OS ---
+.DS_Store
+Thumbs.db

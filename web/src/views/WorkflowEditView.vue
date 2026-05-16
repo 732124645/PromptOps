@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import { ref, computed, onMounted } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
+import { useI18n } from 'vue-i18n'
 import {
   NButton,
   NInput,
@@ -23,6 +24,7 @@ const route = useRoute()
 const router = useRouter()
 const message = useMessage()
 const workspace = useWorkspaceStore()
+const { t } = useI18n()
 
 const isNew = computed(() => !route.params.id)
 const id = ref<string>((route.params.id as string) || '')
@@ -35,11 +37,11 @@ const form = ref<{ key: string; name: string; description: string; steps: Workfl
   steps: [],
 })
 
-const stepTypeOptions = [
-  { label: 'render — 渲染模板', value: 'render' },
-  { label: 'model — 调用模型', value: 'model' },
-  { label: 'transform — 文本变换', value: 'transform' },
-]
+const stepTypeOptions = computed(() => [
+  { label: t('workflow.typeRender'), value: 'render' },
+  { label: t('workflow.typeModel'), value: 'model' },
+  { label: t('workflow.typeTransform'), value: 'transform' },
+])
 const providerOptions = [
   { label: 'mock', value: 'mock' },
   { label: 'openai', value: 'openai' },
@@ -47,16 +49,15 @@ const providerOptions = [
   { label: 'ollama', value: 'ollama' },
   { label: 'gemini', value: 'gemini' },
 ]
-const opOptions = [
-  { label: 'upper — 转大写', value: 'upper' },
-  { label: 'lower — 转小写', value: 'lower' },
-  { label: 'trim — 去首尾空白', value: 'trim' },
-]
-const templatePlaceholder = '模板内容,可使用 变量占位符,以及 input 变量代表上一步的输出'
+const opOptions = computed(() => [
+  { label: t('workflow.opUpper'), value: 'upper' },
+  { label: t('workflow.opLower'), value: 'lower' },
+  { label: t('workflow.opTrim'), value: 'trim' },
+])
 
 function addStep() {
   form.value.steps.push({
-    name: `步骤 ${form.value.steps.length + 1}`,
+    name: t('workflow.stepName', { n: form.value.steps.length + 1 }),
     type: 'render',
     template: '',
     provider: 'mock',
@@ -115,13 +116,13 @@ async function load() {
       steps: data.data.steps,
     }
   } catch {
-    message.error('加载失败')
+    message.error(t('common.loadFailed'))
   }
 }
 
 async function save() {
   if (!form.value.key) {
-    message.warning('Key 不能为空')
+    message.warning(t('common.keyRequired'))
     return
   }
   saving.value = true
@@ -132,14 +133,14 @@ async function save() {
         workspace_id: workspace.currentId,
       })
       id.value = data.data.id
-      message.success('已创建')
+      message.success(t('common.created'))
       router.replace({ name: 'workflow-edit', params: { id: id.value } })
     } else {
       await api.updateWorkflow(id.value, form.value)
-      message.success('已保存')
+      message.success(t('common.saved'))
     }
   } catch {
-    message.error('保存失败')
+    message.error(t('common.saveFailed'))
   } finally {
     saving.value = false
   }
@@ -147,7 +148,7 @@ async function save() {
 
 async function run() {
   if (isNew.value) {
-    message.warning('请先保存 Workflow')
+    message.warning(t('common.saveFirst', { name: t('entity.workflow') }))
     return
   }
   running.value = true
@@ -161,7 +162,7 @@ async function run() {
     result.value = data
   } catch (e) {
     const resp = (e as { response?: { data?: { error?: string } } }).response
-    error.value = resp?.data?.error || '运行失败'
+    error.value = resp?.data?.error || t('common.runFailed')
   } finally {
     running.value = false
   }
@@ -173,14 +174,14 @@ onMounted(load)
 <template>
   <div class="page">
     <div class="toolbar">
-      <h2>{{ isNew ? '新建 Workflow' : `Workflow: ${form.key}` }}</h2>
+      <h2>{{ isNew ? t('workflow.newTitle') : t('workflow.editTitle', { key: form.key }) }}</h2>
       <n-space>
-        <n-button @click="router.push('/workflows')">返回</n-button>
-        <n-button type="primary" :loading="saving" @click="save">保存</n-button>
+        <n-button @click="router.push('/workflows')">{{ t('common.back') }}</n-button>
+        <n-button type="primary" :loading="saving" @click="save">{{ t('common.save') }}</n-button>
       </n-space>
     </div>
 
-    <n-card title="配置" :bordered="true">
+    <n-card :title="t('workflow.configCard')" :bordered="true">
       <n-form>
         <n-grid :cols="2" :x-gap="16">
           <n-grid-item>
@@ -189,25 +190,28 @@ onMounted(load)
             </n-form-item>
           </n-grid-item>
           <n-grid-item>
-            <n-form-item label="名称">
-              <n-input v-model:value="form.name" placeholder="Workflow 名称" />
+            <n-form-item :label="t('common.name')">
+              <n-input v-model:value="form.name" :placeholder="t('workflow.namePlaceholder')" />
             </n-form-item>
           </n-grid-item>
           <n-grid-item :span="2">
-            <n-form-item label="描述">
-              <n-input v-model:value="form.description" placeholder="这个 Workflow 做什么" />
+            <n-form-item :label="t('workflow.descriptionLabel')">
+              <n-input
+                v-model:value="form.description"
+                :placeholder="t('workflow.descriptionPlaceholder')"
+              />
             </n-form-item>
           </n-grid-item>
         </n-grid>
       </n-form>
     </n-card>
 
-    <n-card title="步骤" :bordered="true" style="margin-top: 16px">
+    <n-card :title="t('workflow.stepsCard')" :bordered="true" style="margin-top: 16px">
       <template #header-extra>
-        <n-button size="small" @click="addStep">+ 添加步骤</n-button>
+        <n-button size="small" @click="addStep">{{ t('workflow.addStep') }}</n-button>
       </template>
 
-      <n-empty v-if="!form.steps.length" description="还没有步骤,点击右上角添加" />
+      <n-empty v-if="!form.steps.length" :description="t('workflow.stepsEmpty')" />
       <n-card
         v-for="(step, i) in form.steps"
         :key="i"
@@ -220,7 +224,7 @@ onMounted(load)
           <n-input
             v-model:value="step.name"
             size="small"
-            placeholder="步骤名"
+            :placeholder="t('workflow.stepNamePlaceholder')"
             style="max-width: 180px"
           />
           <n-select
@@ -234,7 +238,9 @@ onMounted(load)
           <n-button size="tiny" :disabled="i === form.steps.length - 1" @click="moveStep(i, 1)">
             ↓
           </n-button>
-          <n-button size="tiny" type="error" ghost @click="removeStep(i)">删除</n-button>
+          <n-button size="tiny" type="error" ghost @click="removeStep(i)">
+            {{ t('common.delete') }}
+          </n-button>
         </div>
         <div class="step-body">
           <n-input
@@ -243,7 +249,7 @@ onMounted(load)
             type="textarea"
             class="mono"
             :autosize="{ minRows: 3, maxRows: 12 }"
-            :placeholder="templatePlaceholder"
+            :placeholder="t('workflow.templatePlaceholder')"
           />
           <n-space v-else-if="step.type === 'model'">
             <n-select
@@ -251,22 +257,29 @@ onMounted(load)
               :options="providerOptions"
               style="width: 150px"
             />
-            <n-input v-model:value="step.model" placeholder="模型(可留空)" style="width: 220px" />
+            <n-input
+              v-model:value="step.model"
+              :placeholder="t('workflow.modelPlaceholder')"
+              style="width: 220px"
+            />
           </n-space>
           <n-select v-else v-model:value="step.op" :options="opOptions" style="width: 220px" />
         </div>
       </n-card>
     </n-card>
 
-    <n-card title="运行" :bordered="true" style="margin-top: 16px">
-      <p v-if="isNew" class="muted">请先保存 Workflow 再运行。</p>
+    <n-card :title="t('workflow.runCard')" :bordered="true" style="margin-top: 16px">
+      <p v-if="isNew" class="muted">{{ t('workflow.runSaveFirst') }}</p>
       <template v-else>
         <n-form>
-          <n-form-item v-if="detectedVars.length" label="变量">
+          <n-form-item v-if="detectedVars.length" :label="t('workflow.variables')">
             <n-space vertical style="width: 100%">
               <div v-for="v in detectedVars" :key="v" class="var-row">
                 <n-tag type="warning" size="small">{{ v }}</n-tag>
-                <n-input v-model:value="variables[v]" :placeholder="`${v} 的值`" />
+                <n-input
+                  v-model:value="variables[v]"
+                  :placeholder="t('agent.varValuePlaceholder', { name: v })"
+                />
               </div>
             </n-space>
           </n-form-item>
@@ -275,17 +288,19 @@ onMounted(load)
               v-model:value="apiKey"
               type="password"
               show-password-on="click"
-              placeholder="含真实模型步骤,需要 API Key"
+              :placeholder="t('workflow.apiKeyPlaceholder')"
             />
           </n-form-item>
-          <n-button type="primary" :loading="running" @click="run">运行 Workflow</n-button>
+          <n-button type="primary" :loading="running" @click="run">
+            {{ t('workflow.runWorkflow') }}
+          </n-button>
         </n-form>
 
-        <n-alert v-if="error" type="error" title="运行失败" style="margin-top: 14px">
+        <n-alert v-if="error" type="error" :title="t('common.runFailed')" style="margin-top: 14px">
           {{ error }}
         </n-alert>
         <template v-if="result">
-          <div class="result-label">步骤轨迹</div>
+          <div class="result-label">{{ t('workflow.stepTrace') }}</div>
           <div v-for="(s, i) in result.steps" :key="i" class="trace">
             <div class="trace-head">
               <n-tag size="small">#{{ i + 1 }}</n-tag>
@@ -294,7 +309,7 @@ onMounted(load)
             </div>
             <pre class="block">{{ s.output }}</pre>
           </div>
-          <div class="result-label">最终输出</div>
+          <div class="result-label">{{ t('workflow.finalOutput') }}</div>
           <pre class="block final">{{ result.output }}</pre>
         </template>
       </template>

@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import { ref, computed, onMounted } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
+import { useI18n } from 'vue-i18n'
 import {
   NButton,
   NInput,
@@ -22,6 +23,7 @@ const route = useRoute()
 const router = useRouter()
 const message = useMessage()
 const workspace = useWorkspaceStore()
+const { t } = useI18n()
 
 const isNew = computed(() => !route.params.id)
 const id = ref<string>((route.params.id as string) || '')
@@ -36,13 +38,13 @@ const form = ref<Partial<Agent>>({
   model: '',
 })
 
-const providerOptions = [
-  { label: 'mock — 离线,无需 API Key', value: 'mock' },
+const providerOptions = computed(() => [
+  { label: t('providers.mock'), value: 'mock' },
   { label: 'OpenAI', value: 'openai' },
   { label: 'Claude', value: 'claude' },
-  { label: 'Ollama — 本地', value: 'ollama' },
+  { label: t('providers.ollama'), value: 'ollama' },
   { label: 'Gemini', value: 'gemini' },
-]
+])
 
 const variables = ref<Record<string, string>>({})
 const apiKey = ref('')
@@ -54,7 +56,9 @@ const detectedVars = computed(() => {
   const matches = (form.value.prompt || '').match(/{{\s*([\w.]+)\s*}}/g) || []
   return [...new Set(matches.map((m) => m.replace(/[{}]/g, '').trim()))]
 })
-const needsKey = computed(() => ['openai', 'claude', 'gemini'].includes(form.value.provider || 'mock'))
+const needsKey = computed(() =>
+  ['openai', 'claude', 'gemini'].includes(form.value.provider || 'mock'),
+)
 
 async function load() {
   if (isNew.value) return
@@ -62,13 +66,13 @@ async function load() {
     const { data } = await api.getAgent(id.value)
     form.value = data.data
   } catch {
-    message.error('加载失败')
+    message.error(t('common.loadFailed'))
   }
 }
 
 async function save() {
   if (!form.value.key) {
-    message.warning('Key 不能为空')
+    message.warning(t('common.keyRequired'))
     return
   }
   saving.value = true
@@ -79,14 +83,14 @@ async function save() {
         workspace_id: workspace.currentId,
       })
       id.value = data.data.id
-      message.success('已创建')
+      message.success(t('common.created'))
       router.replace({ name: 'agent-edit', params: { id: id.value } })
     } else {
       await api.updateAgent(id.value, form.value)
-      message.success('已保存')
+      message.success(t('common.saved'))
     }
   } catch {
-    message.error('保存失败')
+    message.error(t('common.saveFailed'))
   } finally {
     saving.value = false
   }
@@ -94,7 +98,7 @@ async function save() {
 
 async function run() {
   if (isNew.value) {
-    message.warning('请先保存 Agent')
+    message.warning(t('common.saveFirst', { name: t('entity.agent') }))
     return
   }
   running.value = true
@@ -108,7 +112,7 @@ async function run() {
     result.value = data
   } catch (e) {
     const resp = (e as { response?: { data?: { error?: string } } }).response
-    error.value = resp?.data?.error || '运行失败'
+    error.value = resp?.data?.error || t('common.runFailed')
   } finally {
     running.value = false
   }
@@ -120,14 +124,14 @@ onMounted(load)
 <template>
   <div class="page">
     <div class="toolbar">
-      <h2>{{ isNew ? '新建 Agent' : `Agent: ${form.key}` }}</h2>
+      <h2>{{ isNew ? t('agent.newTitle') : t('agent.editTitle', { key: form.key }) }}</h2>
       <n-space>
-        <n-button @click="router.push('/agents')">返回</n-button>
-        <n-button type="primary" :loading="saving" @click="save">保存</n-button>
+        <n-button @click="router.push('/agents')">{{ t('common.back') }}</n-button>
+        <n-button type="primary" :loading="saving" @click="save">{{ t('common.save') }}</n-button>
       </n-space>
     </div>
 
-    <n-card title="配置" :bordered="true">
+    <n-card :title="t('agent.configCard')" :bordered="true">
       <n-form>
         <n-grid :cols="2" :x-gap="16">
           <n-grid-item>
@@ -136,23 +140,26 @@ onMounted(load)
             </n-form-item>
           </n-grid-item>
           <n-grid-item>
-            <n-form-item label="名称">
-              <n-input v-model:value="form.name" placeholder="Agent 名称" />
+            <n-form-item :label="t('common.name')">
+              <n-input v-model:value="form.name" :placeholder="t('agent.namePlaceholder')" />
             </n-form-item>
           </n-grid-item>
           <n-grid-item>
-            <n-form-item label="模型提供方">
+            <n-form-item :label="t('agent.providerLabel')">
               <n-select v-model:value="form.provider" :options="providerOptions" />
             </n-form-item>
           </n-grid-item>
           <n-grid-item>
-            <n-form-item label="模型">
-              <n-input v-model:value="form.model" placeholder="留空使用默认模型" />
+            <n-form-item :label="t('common.model')">
+              <n-input v-model:value="form.model" :placeholder="t('agent.modelPlaceholder')" />
             </n-form-item>
           </n-grid-item>
           <n-grid-item :span="2">
-            <n-form-item label="描述">
-              <n-input v-model:value="form.description" placeholder="这个 Agent 做什么" />
+            <n-form-item :label="t('agent.descriptionLabel')">
+              <n-input
+                v-model:value="form.description"
+                :placeholder="t('agent.descriptionPlaceholder')"
+              />
             </n-form-item>
           </n-grid-item>
         </n-grid>
@@ -162,21 +169,24 @@ onMounted(load)
             type="textarea"
             class="mono"
             :autosize="{ minRows: 8, maxRows: 20 }"
-            placeholder="Agent 的 Prompt,使用 双花括号变量 作为占位符"
+            :placeholder="t('agent.promptPlaceholder')"
           />
         </n-form-item>
       </n-form>
     </n-card>
 
-    <n-card title="运行" :bordered="true" style="margin-top: 16px">
-      <p v-if="isNew" class="muted">请先保存 Agent 再运行。</p>
+    <n-card :title="t('agent.runCard')" :bordered="true" style="margin-top: 16px">
+      <p v-if="isNew" class="muted">{{ t('agent.runSaveFirst') }}</p>
       <template v-else>
         <n-form>
-          <n-form-item v-if="detectedVars.length" label="变量">
+          <n-form-item v-if="detectedVars.length" :label="t('agent.variables')">
             <n-space vertical style="width: 100%">
               <div v-for="v in detectedVars" :key="v" class="var-row">
                 <n-tag type="warning" size="small">{{ v }}</n-tag>
-                <n-input v-model:value="variables[v]" :placeholder="`${v} 的值`" />
+                <n-input
+                  v-model:value="variables[v]"
+                  :placeholder="t('agent.varValuePlaceholder', { name: v })"
+                />
               </div>
             </n-space>
           </n-form-item>
@@ -185,20 +195,22 @@ onMounted(load)
               v-model:value="apiKey"
               type="password"
               show-password-on="click"
-              placeholder="该提供方需要 API Key"
+              :placeholder="t('agent.apiKeyPlaceholder')"
             />
           </n-form-item>
-          <n-button type="primary" :loading="running" @click="run">运行 Agent</n-button>
+          <n-button type="primary" :loading="running" @click="run">
+            {{ t('agent.runAgent') }}
+          </n-button>
         </n-form>
 
-        <n-alert v-if="error" type="error" title="运行失败" style="margin-top: 14px">
+        <n-alert v-if="error" type="error" :title="t('common.runFailed')" style="margin-top: 14px">
           {{ error }}
         </n-alert>
         <template v-if="result">
-          <div class="result-label">渲染后的 Prompt</div>
+          <div class="result-label">{{ t('result.rendered') }}</div>
           <pre class="block">{{ result.rendered }}</pre>
           <div class="result-label">
-            模型输出 · {{ result.result.provider }} / {{ result.result.model }}
+            {{ t('result.modelOutput') }} · {{ result.result.provider }} / {{ result.result.model }}
           </div>
           <pre class="block">{{ result.result.output }}</pre>
         </template>

@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import { ref, onMounted } from 'vue'
+import { useI18n } from 'vue-i18n'
 import {
   NCard,
   NGrid,
@@ -17,6 +18,7 @@ import {
 import { api, type AuditEntry, type RunEntry, type RunStats } from '../api/client'
 
 const message = useMessage()
+const { t } = useI18n()
 const loading = ref(false)
 const stats = ref<RunStats | null>(null)
 const runs = ref<RunEntry[]>([])
@@ -30,7 +32,7 @@ async function load() {
     runs.value = r.data.data
     audit.value = a.data.data
   } catch {
-    message.error('加载失败')
+    message.error(t('common.loadFailed'))
   } finally {
     loading.value = false
   }
@@ -46,8 +48,8 @@ onMounted(load)
 <template>
   <div class="page">
     <div class="toolbar">
-      <h2>观测</h2>
-      <n-button size="small" @click="load">刷新</n-button>
+      <h2>{{ t('observability.title') }}</h2>
+      <n-button size="small" @click="load">{{ t('common.refresh') }}</n-button>
     </div>
 
     <n-spin :show="loading">
@@ -55,31 +57,31 @@ onMounted(load)
         <n-gi>
           <n-card>
             <div class="stat-num">{{ stats.total }}</div>
-            <div class="stat-label">总运行次数</div>
+            <div class="stat-label">{{ t('observability.totalRuns') }}</div>
           </n-card>
         </n-gi>
         <n-gi>
           <n-card>
             <div class="stat-num">{{ stats.ok }} / {{ stats.error }}</div>
-            <div class="stat-label">成功 / 失败</div>
+            <div class="stat-label">{{ t('observability.okError') }}</div>
           </n-card>
         </n-gi>
         <n-gi>
           <n-card>
             <div class="stat-num">{{ stats.prompt_tokens + stats.output_tokens }}</div>
-            <div class="stat-label">估算 Token 总量</div>
+            <div class="stat-label">{{ t('observability.estTokens') }}</div>
           </n-card>
         </n-gi>
         <n-gi>
           <n-card>
             <div class="stat-num">{{ stats.avg_latency_ms }} ms</div>
-            <div class="stat-label">平均延迟</div>
+            <div class="stat-label">{{ t('observability.avgLatency') }}</div>
           </n-card>
         </n-gi>
       </n-grid>
 
       <div v-if="stats && stats.by_provider.length" class="providers">
-        <span class="muted">按提供方:</span>
+        <span class="muted">{{ t('observability.byProvider') }}</span>
         <n-space :size="6">
           <n-tag v-for="p in stats.by_provider" :key="p.provider" size="small" type="info">
             {{ p.provider }} · {{ p.count }}
@@ -88,18 +90,22 @@ onMounted(load)
       </div>
 
       <n-tabs type="line" style="margin-top: 16px">
-        <n-tab-pane name="runs" tab="运行日志">
-          <n-empty v-if="!runs.length" description="暂无运行记录" style="margin: 32px 0" />
+        <n-tab-pane name="runs" :tab="t('observability.tabRuns')">
+          <n-empty
+            v-if="!runs.length"
+            :description="t('observability.noRuns')"
+            style="margin: 32px 0"
+          />
           <n-table v-else :bordered="false" :single-line="false">
             <thead>
               <tr>
-                <th>时间</th>
-                <th>来源</th>
-                <th>提供方</th>
-                <th>模型</th>
-                <th>Token (in / out)</th>
-                <th>延迟</th>
-                <th>状态</th>
+                <th>{{ t('observability.colTime') }}</th>
+                <th>{{ t('observability.colSource') }}</th>
+                <th>{{ t('observability.colProvider') }}</th>
+                <th>{{ t('common.model') }}</th>
+                <th>{{ t('observability.colTokens') }}</th>
+                <th>{{ t('observability.colLatency') }}</th>
+                <th>{{ t('observability.colStatus') }}</th>
               </tr>
             </thead>
             <tbody>
@@ -120,16 +126,20 @@ onMounted(load)
           </n-table>
         </n-tab-pane>
 
-        <n-tab-pane name="audit" tab="审计日志">
-          <n-empty v-if="!audit.length" description="暂无审计记录" style="margin: 32px 0" />
+        <n-tab-pane name="audit" :tab="t('observability.tabAudit')">
+          <n-empty
+            v-if="!audit.length"
+            :description="t('observability.noAudit')"
+            style="margin: 32px 0"
+          />
           <n-table v-else :bordered="false" :single-line="false">
             <thead>
               <tr>
-                <th>时间</th>
-                <th>操作</th>
-                <th>资源</th>
+                <th>{{ t('observability.colTime') }}</th>
+                <th>{{ t('observability.colAction') }}</th>
+                <th>{{ t('observability.colResource') }}</th>
                 <th>Key</th>
-                <th>说明</th>
+                <th>{{ t('observability.colSummary') }}</th>
               </tr>
             </thead>
             <tbody>

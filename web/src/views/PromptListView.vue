@@ -1,6 +1,7 @@
 <script setup lang="ts">
-import { ref, watch, onMounted, onBeforeUnmount } from 'vue'
+import { ref, computed, watch, onMounted, onBeforeUnmount } from 'vue'
 import { useRouter } from 'vue-router'
+import { useI18n } from 'vue-i18n'
 import { useWorkspaceStore } from '../stores/workspace'
 import {
   NButton,
@@ -20,6 +21,7 @@ const router = useRouter()
 const message = useMessage()
 const dialog = useDialog()
 const workspace = useWorkspaceStore()
+const { t } = useI18n()
 
 const prompts = ref<Prompt[]>([])
 const q = ref('')
@@ -27,12 +29,12 @@ const env = ref<string | null>(null)
 const loading = ref(false)
 const live = ref(false)
 
-const envOptions = [
-  { label: '全部环境', value: '' },
+const envOptions = computed(() => [
+  { label: t('prompt.allEnvs'), value: '' },
   { label: 'dev', value: 'dev' },
   { label: 'test', value: 'test' },
   { label: 'prod', value: 'prod' },
-]
+])
 
 let socket: WebSocket | null = null
 
@@ -45,7 +47,7 @@ async function load() {
     const { data } = await api.list(params)
     prompts.value = data.data
   } catch {
-    message.error('加载失败')
+    message.error(t('common.loadFailed'))
   } finally {
     loading.value = false
   }
@@ -54,7 +56,7 @@ async function load() {
 function tagsOf(p: Prompt): string[] {
   return (p.tags || '')
     .split(',')
-    .map((t) => t.trim())
+    .map((s) => s.trim())
     .filter(Boolean)
 }
 
@@ -64,13 +66,13 @@ function edit(p: Prompt) {
 
 function remove(p: Prompt) {
   dialog.warning({
-    title: '删除 Prompt',
-    content: `确定删除 "${p.key}" (${p.env}) 吗?此操作不可撤销。`,
-    positiveText: '删除',
-    negativeText: '取消',
+    title: t('prompt.deleteTitle'),
+    content: t('prompt.deleteConfirm', { key: p.key, env: p.env }),
+    positiveText: t('common.delete'),
+    negativeText: t('common.cancel'),
     onPositiveClick: async () => {
       await api.remove(p.id)
-      message.success('已删除')
+      message.success(t('common.deleted'))
       load()
     },
   })
@@ -83,7 +85,7 @@ function connectWS() {
     socket.onopen = () => (live.value = true)
     socket.onclose = () => (live.value = false)
     socket.onmessage = () => {
-      message.info('检测到 Prompt 变更,已刷新')
+      message.info(t('prompt.changeDetected'))
       load()
     }
   } catch {
@@ -105,19 +107,19 @@ onBeforeUnmount(() => socket?.close())
   <div class="page">
     <div class="toolbar">
       <div class="left">
-        <h2>Prompts</h2>
-        <n-tag v-if="live" type="success" size="small" round>● 热更新已连接</n-tag>
-        <n-tag v-else size="small" round>○ 离线</n-tag>
+        <h2>{{ t('prompt.title') }}</h2>
+        <n-tag v-if="live" type="success" size="small" round>{{ t('prompt.liveConnected') }}</n-tag>
+        <n-tag v-else size="small" round>{{ t('prompt.offline') }}</n-tag>
       </div>
       <n-button type="primary" @click="router.push({ name: 'prompt-new' })">
-        + 新建 Prompt
+        {{ t('prompt.newPrompt') }}
       </n-button>
     </div>
 
     <n-space class="filters">
       <n-input
         v-model:value="q"
-        placeholder="搜索 key / 名称 / 内容"
+        :placeholder="t('prompt.searchPlaceholder')"
         clearable
         style="width: 280px"
         @keyup.enter="load"
@@ -125,26 +127,26 @@ onBeforeUnmount(() => socket?.close())
       <n-select
         v-model:value="env"
         :options="envOptions"
-        placeholder="环境"
+        :placeholder="t('common.env')"
         style="width: 140px"
         @update:value="load"
       />
-      <n-button @click="load">搜索</n-button>
+      <n-button @click="load">{{ t('common.search') }}</n-button>
     </n-space>
 
     <n-spin :show="loading">
-      <n-empty v-if="!prompts.length" description="暂无 Prompt" style="margin: 48px 0" />
+      <n-empty v-if="!prompts.length" :description="t('prompt.empty')" style="margin: 48px 0" />
       <n-table v-else :bordered="false" :single-line="false">
         <thead>
           <tr>
             <th>Key</th>
-            <th>名称</th>
-            <th>环境</th>
-            <th>版本</th>
-            <th>分类</th>
-            <th>标签</th>
-            <th>模型</th>
-            <th>操作</th>
+            <th>{{ t('common.name') }}</th>
+            <th>{{ t('common.env') }}</th>
+            <th>{{ t('common.version') }}</th>
+            <th>{{ t('prompt.colCategory') }}</th>
+            <th>{{ t('prompt.colTags') }}</th>
+            <th>{{ t('common.model') }}</th>
+            <th>{{ t('common.actions') }}</th>
           </tr>
         </thead>
         <tbody>
@@ -156,15 +158,17 @@ onBeforeUnmount(() => socket?.close())
             <td>{{ p.category || '-' }}</td>
             <td>
               <n-space :size="4">
-                <n-tag v-for="t in tagsOf(p)" :key="t" size="small" type="info">{{ t }}</n-tag>
+                <n-tag v-for="tg in tagsOf(p)" :key="tg" size="small" type="info">{{ tg }}</n-tag>
                 <span v-if="!tagsOf(p).length">-</span>
               </n-space>
             </td>
             <td>{{ p.model || '-' }}</td>
             <td>
               <n-space :size="4">
-                <n-button size="tiny" @click="edit(p)">编辑</n-button>
-                <n-button size="tiny" type="error" ghost @click="remove(p)">删除</n-button>
+                <n-button size="tiny" @click="edit(p)">{{ t('common.edit') }}</n-button>
+                <n-button size="tiny" type="error" ghost @click="remove(p)">
+                  {{ t('common.delete') }}
+                </n-button>
               </n-space>
             </td>
           </tr>

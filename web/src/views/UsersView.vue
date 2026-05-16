@@ -1,5 +1,6 @@
 <script setup lang="ts">
-import { ref, onMounted } from 'vue'
+import { ref, computed, onMounted } from 'vue'
+import { useI18n } from 'vue-i18n'
 import {
   NCard,
   NTable,
@@ -22,17 +23,18 @@ import { useAuthStore } from '../stores/auth'
 const message = useMessage()
 const dialog = useDialog()
 const auth = useAuthStore()
+const { t } = useI18n()
 
 const users = ref<User[]>([])
 const loading = ref(false)
 const showCreate = ref(false)
 const form = ref({ username: '', password: '', role: 'viewer' })
 
-const roleOptions = [
-  { label: 'admin — 全部权限', value: 'admin' },
-  { label: 'editor — 可读写', value: 'editor' },
-  { label: 'viewer — 只读', value: 'viewer' },
-]
+const roleOptions = computed(() => [
+  { label: t('users.roleAdmin'), value: 'admin' },
+  { label: t('users.roleEditor'), value: 'editor' },
+  { label: t('users.roleViewer'), value: 'viewer' },
+])
 
 async function load() {
   loading.value = true
@@ -40,7 +42,7 @@ async function load() {
     const { data } = await api.listUsers()
     users.value = data.data
   } catch {
-    message.error('加载失败')
+    message.error(t('common.loadFailed'))
   } finally {
     loading.value = false
   }
@@ -48,36 +50,36 @@ async function load() {
 
 async function create() {
   if (!form.value.username || !form.value.password) {
-    message.warning('用户名和密码必填')
+    message.warning(t('users.credentialsRequired'))
     return
   }
   try {
     await api.createUser(form.value)
-    message.success('已创建')
+    message.success(t('common.created'))
     showCreate.value = false
     form.value = { username: '', password: '', role: 'viewer' }
     load()
   } catch (e) {
     const resp = (e as { response?: { data?: { error?: string } } }).response
-    message.error(resp?.data?.error || '创建失败')
+    message.error(resp?.data?.error || t('common.createFailed'))
   }
 }
 
 async function changeRole(u: User, role: string) {
   await api.updateUser(u.id, { role })
-  message.success(`已将 ${u.username} 设为 ${role}`)
+  message.success(t('users.roleChanged', { name: u.username, role }))
   load()
 }
 
 function remove(u: User) {
   dialog.warning({
-    title: '删除用户',
-    content: `确定删除用户 "${u.username}" 吗?`,
-    positiveText: '删除',
-    negativeText: '取消',
+    title: t('users.deleteTitle'),
+    content: t('users.deleteConfirm', { name: u.username }),
+    positiveText: t('common.delete'),
+    negativeText: t('common.cancel'),
     onPositiveClick: async () => {
       await api.removeUser(u.id)
-      message.success('已删除')
+      message.success(t('common.deleted'))
       load()
     },
   })
@@ -93,26 +95,28 @@ onMounted(load)
 <template>
   <div class="page">
     <div class="toolbar">
-      <h2>用户管理</h2>
-      <n-button type="primary" @click="showCreate = true">+ 新建用户</n-button>
+      <h2>{{ t('users.title') }}</h2>
+      <n-button type="primary" @click="showCreate = true">{{ t('users.newUser') }}</n-button>
     </div>
 
     <n-spin :show="loading">
-      <n-empty v-if="!users.length" description="暂无用户" style="margin: 48px 0" />
+      <n-empty v-if="!users.length" :description="t('users.empty')" style="margin: 48px 0" />
       <n-table v-else :bordered="false" :single-line="false">
         <thead>
           <tr>
-            <th>用户名</th>
-            <th>角色</th>
-            <th>创建时间</th>
-            <th>操作</th>
+            <th>{{ t('users.colUsername') }}</th>
+            <th>{{ t('users.colRole') }}</th>
+            <th>{{ t('users.colCreatedAt') }}</th>
+            <th>{{ t('common.actions') }}</th>
           </tr>
         </thead>
         <tbody>
           <tr v-for="u in users" :key="u.id">
             <td>
               <code>{{ u.username }}</code>
-              <n-tag v-if="u.username === auth.username" size="tiny" type="success">当前</n-tag>
+              <n-tag v-if="u.username === auth.username" size="tiny" type="success">
+                {{ t('common.current') }}
+              </n-tag>
             </td>
             <td>
               <n-select
@@ -132,7 +136,7 @@ onMounted(load)
                 :disabled="u.username === auth.username"
                 @click="remove(u)"
               >
-                删除
+                {{ t('common.delete') }}
               </n-button>
             </td>
           </tr>
@@ -140,25 +144,30 @@ onMounted(load)
       </n-table>
     </n-spin>
 
-    <n-modal v-model:show="showCreate" preset="card" title="新建用户" style="width: 420px">
+    <n-modal
+      v-model:show="showCreate"
+      preset="card"
+      :title="t('users.createTitle')"
+      style="width: 420px"
+    >
       <n-form>
-        <n-form-item label="用户名">
-          <n-input v-model:value="form.username" placeholder="用户名" />
+        <n-form-item :label="t('users.colUsername')">
+          <n-input v-model:value="form.username" :placeholder="t('users.usernamePlaceholder')" />
         </n-form-item>
-        <n-form-item label="密码">
+        <n-form-item :label="t('login.password')">
           <n-input
             v-model:value="form.password"
             type="password"
             show-password-on="click"
-            placeholder="密码"
+            :placeholder="t('users.passwordPlaceholder')"
           />
         </n-form-item>
-        <n-form-item label="角色">
+        <n-form-item :label="t('users.roleLabel')">
           <n-select v-model:value="form.role" :options="roleOptions" />
         </n-form-item>
         <n-space justify="end">
-          <n-button @click="showCreate = false">取消</n-button>
-          <n-button type="primary" @click="create">创建</n-button>
+          <n-button @click="showCreate = false">{{ t('common.cancel') }}</n-button>
+          <n-button type="primary" @click="create">{{ t('common.create') }}</n-button>
         </n-space>
       </n-form>
     </n-modal>

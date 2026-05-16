@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import { computed, ref, watch } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
+import { useI18n } from 'vue-i18n'
 import {
   NLayout,
   NLayoutHeader,
@@ -16,6 +17,7 @@ import {
 import { useAuthStore } from './stores/auth'
 import { useWorkspaceStore } from './stores/workspace'
 import { api } from './api/client'
+import { setLocale, type Locale } from './i18n'
 
 const route = useRoute()
 const router = useRouter()
@@ -23,6 +25,15 @@ const auth = useAuthStore()
 const ws = useWorkspaceStore()
 const message = useMessage()
 const dialog = useDialog()
+const { t, locale } = useI18n()
+
+const localeOptions = [
+  { label: '中文', value: 'zh-CN' },
+  { label: 'English', value: 'en' },
+]
+function changeLocale(value: Locale) {
+  setLocale(value)
+}
 
 const showHeader = computed(() => route.name !== 'login')
 const wsOptions = computed(() => ws.list.map((w) => ({ label: w.name, value: w.id })))
@@ -54,25 +65,25 @@ async function createWs() {
     newWsName.value = ''
     await ws.loadList()
     ws.setCurrent(data.data.id)
-    message.success('工作区已创建')
+    message.success(t('app.workspaceCreated'))
   } catch {
-    message.error('创建工作区失败')
+    message.error(t('app.workspaceCreateFailed'))
   }
 }
 
 function removeWs(id: string, name: string) {
   dialog.warning({
-    title: '删除工作区',
-    content: `确定删除工作区 "${name}" 吗?其中的资源不会被删除,但将不再归属此工作区。`,
-    positiveText: '删除',
-    negativeText: '取消',
+    title: t('app.deleteWorkspaceTitle'),
+    content: t('app.deleteWorkspaceConfirm', { name }),
+    positiveText: t('common.delete'),
+    negativeText: t('common.cancel'),
     onPositiveClick: async () => {
       try {
         await api.removeWorkspace(id)
         await ws.loadList()
-        message.success('已删除')
+        message.success(t('common.deleted'))
       } catch {
-        message.error('删除失败')
+        message.error(t('common.deleteFailed'))
       }
     },
   })
@@ -103,59 +114,79 @@ watch(
           <span class="tag">Runtime</span>
         </div>
         <nav class="nav">
-          <a :class="{ active: isActive('prompts') }" @click="router.push('/')">Prompts</a>
-          <a :class="{ active: isActive('agents') }" @click="router.push('/agents')">Agents</a>
+          <a :class="{ active: isActive('prompts') }" @click="router.push('/')">
+            {{ t('nav.prompts') }}
+          </a>
+          <a :class="{ active: isActive('agents') }" @click="router.push('/agents')">
+            {{ t('nav.agents') }}
+          </a>
           <a :class="{ active: isActive('workflows') }" @click="router.push('/workflows')">
-            Workflows
+            {{ t('nav.workflows') }}
           </a>
           <a :class="{ active: isActive('playground') }" @click="router.push('/playground')">
-            Playground
+            {{ t('nav.playground') }}
           </a>
           <a
             :class="{ active: isActive('observability') }"
             @click="router.push('/observability')"
           >
-            观测
+            {{ t('nav.observability') }}
           </a>
           <a
             v-if="auth.isAdmin"
             :class="{ active: isActive('users') }"
             @click="router.push('/users')"
           >
-            用户
+            {{ t('nav.users') }}
           </a>
         </nav>
       </div>
       <div class="right">
         <n-select
+          :value="locale"
+          :options="localeOptions"
+          size="small"
+          style="width: 96px"
+          @update:value="changeLocale"
+        />
+        <n-select
           :value="ws.currentId"
           :options="wsOptions"
           size="small"
           style="width: 150px"
-          placeholder="工作区"
+          :placeholder="t('app.workspacePlaceholder')"
           @update:value="ws.setCurrent"
         />
-        <n-button quaternary size="tiny" @click="showWs = true">管理</n-button>
+        <n-button quaternary size="tiny" @click="showWs = true">{{ t('app.manage') }}</n-button>
         <span class="who">{{ auth.username || '—' }}</span>
         <n-tag size="tiny" :type="auth.isAdmin ? 'success' : 'default'">{{ auth.role }}</n-tag>
-        <n-button quaternary size="small" @click="logout">退出登录</n-button>
+        <n-button quaternary size="small" @click="logout">{{ t('app.logout') }}</n-button>
       </div>
     </n-layout-header>
     <n-layout-content :content-style="'min-height: 100%'">
       <router-view />
     </n-layout-content>
 
-    <n-modal v-model:show="showWs" preset="card" title="工作区管理" style="width: 440px">
+    <n-modal
+      v-model:show="showWs"
+      preset="card"
+      :title="t('app.workspaceManage')"
+      style="width: 440px"
+    >
       <div v-for="w in ws.list" :key="w.id" class="ws-row">
         <span>{{ w.name }}</span>
-        <n-tag v-if="w.id === 'default'" size="tiny">默认</n-tag>
+        <n-tag v-if="w.id === 'default'" size="tiny">{{ t('app.default') }}</n-tag>
         <n-button v-else size="tiny" type="error" ghost @click="removeWs(w.id, w.name)">
-          删除
+          {{ t('common.delete') }}
         </n-button>
       </div>
       <div class="ws-create">
-        <n-input v-model:value="newWsName" placeholder="新工作区名称" size="small" />
-        <n-button size="small" type="primary" @click="createWs">创建</n-button>
+        <n-input
+          v-model:value="newWsName"
+          :placeholder="t('app.newWorkspacePlaceholder')"
+          size="small"
+        />
+        <n-button size="small" type="primary" @click="createWs">{{ t('common.create') }}</n-button>
       </div>
     </n-modal>
   </n-layout>

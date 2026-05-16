@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import { ref, computed, onMounted, watch } from 'vue'
+import { useI18n } from 'vue-i18n'
 import {
   NCard,
   NSelect,
@@ -17,6 +18,7 @@ import {
 import { api, type Prompt, type PlaygroundResponse } from '../api/client'
 
 const message = useMessage()
+const { t } = useI18n()
 
 const prompts = ref<Prompt[]>([])
 const selectedId = ref<string | null>(null)
@@ -32,13 +34,13 @@ const running = ref(false)
 const result = ref<PlaygroundResponse | null>(null)
 const error = ref('')
 
-const providerOptions = [
-  { label: 'mock — 离线,无需 API Key', value: 'mock' },
+const providerOptions = computed(() => [
+  { label: t('providers.mock'), value: 'mock' },
   { label: 'OpenAI', value: 'openai' },
   { label: 'Claude', value: 'claude' },
-  { label: 'Ollama — 本地', value: 'ollama' },
+  { label: t('providers.ollama'), value: 'ollama' },
   { label: 'Gemini', value: 'gemini' },
-]
+])
 
 const promptOptions = computed(() =>
   prompts.value.map((p) => ({ label: `${p.key} (${p.env})`, value: p.id })),
@@ -67,7 +69,7 @@ async function loadPrompts() {
     const { data } = await api.list({})
     prompts.value = data.data
   } catch {
-    message.error('加载 Prompt 列表失败')
+    message.error(t('playground.loadListFailed'))
   }
 }
 
@@ -77,13 +79,13 @@ async function loadPromptContent(id: string) {
     content.value = data.data.content
     if (data.data.model) model.value = data.data.model
   } catch {
-    message.error('加载 Prompt 失败')
+    message.error(t('common.loadFailed'))
   }
 }
 
 async function run() {
   if (!content.value.trim()) {
-    message.warning('Prompt 内容不能为空')
+    message.warning(t('playground.contentRequired'))
     return
   }
   running.value = true
@@ -101,7 +103,7 @@ async function run() {
     result.value = data
   } catch (e) {
     const resp = (e as { response?: { data?: { error?: string } } }).response
-    error.value = resp?.data?.error || '运行失败'
+    error.value = resp?.data?.error || t('common.runFailed')
   } finally {
     running.value = false
   }
@@ -112,48 +114,51 @@ onMounted(loadPrompts)
 
 <template>
   <div class="page">
-    <h2>Playground</h2>
+    <h2>{{ t('playground.title') }}</h2>
 
     <n-card :bordered="true">
       <n-form>
-        <n-form-item label="从已有 Prompt 载入(可选)">
+        <n-form-item :label="t('playground.loadFromPrompt')">
           <n-select
             v-model:value="selectedId"
             :options="promptOptions"
-            placeholder="选择一个 Prompt"
+            :placeholder="t('playground.selectPrompt')"
             clearable
             @update:value="(v) => v && loadPromptContent(v)"
           />
         </n-form-item>
 
-        <n-form-item label="Prompt 内容">
+        <n-form-item :label="t('playground.contentLabel')">
           <n-input
             v-model:value="content"
             type="textarea"
             class="mono"
             :autosize="{ minRows: 6, maxRows: 18 }"
-            placeholder="输入 Prompt,使用 双花括号变量 作为占位符"
+            :placeholder="t('playground.contentPlaceholder')"
           />
         </n-form-item>
 
-        <n-form-item v-if="detectedVars.length" label="变量">
+        <n-form-item v-if="detectedVars.length" :label="t('playground.variables')">
           <n-space vertical style="width: 100%">
             <div v-for="v in detectedVars" :key="v" class="var-row">
               <n-tag type="warning" size="small">{{ v }}</n-tag>
-              <n-input v-model:value="variables[v]" :placeholder="`${v} 的值`" />
+              <n-input
+                v-model:value="variables[v]"
+                :placeholder="t('agent.varValuePlaceholder', { name: v })"
+              />
             </div>
           </n-space>
         </n-form-item>
 
         <n-grid :cols="2" :x-gap="16">
           <n-grid-item>
-            <n-form-item label="模型提供方">
+            <n-form-item :label="t('playground.providerLabel')">
               <n-select v-model:value="provider" :options="providerOptions" />
             </n-form-item>
           </n-grid-item>
           <n-grid-item>
-            <n-form-item label="模型">
-              <n-input v-model:value="model" placeholder="留空使用默认模型" />
+            <n-form-item :label="t('common.model')">
+              <n-input v-model:value="model" :placeholder="t('playground.modelPlaceholder')" />
             </n-form-item>
           </n-grid-item>
           <n-grid-item v-if="needsKey">
@@ -162,7 +167,7 @@ onMounted(loadPrompts)
                 v-model:value="apiKey"
                 type="password"
                 show-password-on="click"
-                placeholder="该提供方需要 API Key"
+                :placeholder="t('playground.apiKeyPlaceholder')"
               />
             </n-form-item>
           </n-grid-item>
@@ -173,19 +178,24 @@ onMounted(loadPrompts)
           </n-grid-item>
         </n-grid>
 
-        <n-button type="primary" :loading="running" @click="run">运行</n-button>
+        <n-button type="primary" :loading="running" @click="run">{{ t('common.run') }}</n-button>
       </n-form>
     </n-card>
 
-    <n-alert v-if="error" type="error" title="运行失败" style="margin-top: 16px">
+    <n-alert v-if="error" type="error" :title="t('common.runFailed')" style="margin-top: 16px">
       {{ error }}
     </n-alert>
 
-    <n-card v-if="result" title="结果" :bordered="true" style="margin-top: 16px">
-      <div class="result-label">渲染后的 Prompt</div>
+    <n-card
+      v-if="result"
+      :title="t('playground.resultCard')"
+      :bordered="true"
+      style="margin-top: 16px"
+    >
+      <div class="result-label">{{ t('result.rendered') }}</div>
       <pre class="block">{{ result.rendered }}</pre>
       <div class="result-label">
-        模型输出 · {{ result.result.provider }} / {{ result.result.model }}
+        {{ t('result.modelOutput') }} · {{ result.result.provider }} / {{ result.result.model }}
       </div>
       <pre class="block">{{ result.result.output }}</pre>
     </n-card>
