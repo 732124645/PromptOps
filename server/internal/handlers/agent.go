@@ -59,6 +59,7 @@ func (h *Handler) CreateAgent(c *gin.Context) {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
 		return
 	}
+	h.recordAudit("create", "agent", body.ID, body.Key, body.Name)
 	c.JSON(http.StatusOK, gin.H{"data": body})
 }
 
@@ -86,15 +87,20 @@ func (h *Handler) UpdateAgent(c *gin.Context) {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
 		return
 	}
+	h.recordAudit("update", "agent", a.ID, a.Key, a.Name)
 	c.JSON(http.StatusOK, gin.H{"data": a})
 }
 
 // DeleteAgent removes an agent.
 func (h *Handler) DeleteAgent(c *gin.Context) {
-	if err := h.db.Delete(&models.Agent{}, "id = ?", c.Param("id")).Error; err != nil {
+	id := c.Param("id")
+	var a models.Agent
+	h.db.First(&a, "id = ?", id)
+	if err := h.db.Delete(&models.Agent{}, "id = ?", id).Error; err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
 		return
 	}
+	h.recordAudit("delete", "agent", id, a.Key, a.Name)
 	c.JSON(http.StatusOK, gin.H{"ok": true})
 }
 
@@ -121,6 +127,7 @@ func (h *Handler) RunAgent(c *gin.Context) {
 		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
 		return
 	}
+	start := time.Now()
 	result, err := prov.Run(providers.Request{
 		Model:   a.Model,
 		APIKey:  body.APIKey,
@@ -128,8 +135,10 @@ func (h *Handler) RunAgent(c *gin.Context) {
 		Prompt:  rendered,
 	})
 	if err != nil {
+		h.recordRun("agent", a.Key, a.Provider, a.Model, rendered, "", time.Since(start), err)
 		c.JSON(http.StatusBadGateway, gin.H{"error": err.Error(), "rendered": rendered})
 		return
 	}
+	h.recordRun("agent", a.Key, result.Provider, result.Model, rendered, result.Output, time.Since(start), nil)
 	c.JSON(http.StatusOK, gin.H{"rendered": rendered, "result": result})
 }

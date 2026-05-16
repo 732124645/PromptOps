@@ -10,13 +10,14 @@ const auth = useAuthStore()
 
 const showHeader = computed(() => route.name !== 'login')
 
-function isActive(section: 'prompts' | 'playground' | 'agents' | 'workflows') {
+function isActive(section: 'prompts' | 'playground' | 'agents' | 'workflows' | 'observability') {
   const name = String(route.name || '')
   const groups: Record<string, string[]> = {
     prompts: ['prompts', 'prompt-new', 'prompt-edit'],
     playground: ['playground'],
     agents: ['agents', 'agent-new', 'agent-edit'],
     workflows: ['workflows', 'workflow-new', 'workflow-edit'],
+    observability: ['observability'],
   }
   return groups[section].includes(name)
 }
@@ -43,6 +44,12 @@ function logout() {
           </a>
           <a :class="{ active: isActive('playground') }" @click="router.push('/playground')">
             Playground
+          </a>
+          <a
+            :class="{ active: isActive('observability') }"
+            @click="router.push('/observability')"
+          >
+            观测
           </a>
         </nav>
       </div>

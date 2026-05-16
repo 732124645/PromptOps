@@ -51,6 +51,9 @@ func newTestRouter(t *testing.T) *gin.Engine {
 		api.PUT("/workflows/:id", h.UpdateWorkflow)
 		api.DELETE("/workflows/:id", h.DeleteWorkflow)
 		api.POST("/workflows/:id/run", h.RunWorkflow)
+		api.GET("/audit", h.ListAudit)
+		api.GET("/runs", h.ListRuns)
+		api.GET("/runs/stats", h.RunStats)
 	}
 	return r
 }

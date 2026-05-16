@@ -10,17 +10,18 @@ Workflow 从代码中解耦出来,让 AI 应用支持 Prompt 的热更新、版�
 
 ## 当前进度
 
-MVP、SDK / 热更新、Playground、Agent / Workflow 运行时均已完成。
+MVP、SDK / 热更新、Playground、Agent / Workflow 运行时、可观测性与审计均已完成。
 
 | 模块 | 技术栈 | 说明 |
 |---|---|---|
 | 后端 | Go + Gin + GORM + SQLite | Prompt CRUD / 搜索 / 版本管理 / 多环境 / SDK 接口 |
 | 热更新 | WebSocket (`/ws`) | Prompt 变更实时推送给已连接客户端 |
-| 前端 | Vue3 + Vite + Naive UI + Pinia | Prompt / Agent / Workflow / Playground 页面 |
+| 前端 | Vue3 + Vite + Naive UI + Pinia | Prompt / Agent / Workflow / Playground / 观测 页面 |
 | SDK | Node / Python / Java(均零依赖) | 按 key 获取 Prompt、模板渲染、WebSocket 热更新 |
 | Playground | 模型网关(mock / OpenAI / Claude / Ollama / Gemini) | 填变量、调用模型、查看结果;版本 Diff 对比 |
 | Agent | 配置化 Agent(Prompt + 提供方 + 模型) | 保存可复用配置并一键运行 |
 | Workflow | 步骤引擎(render → model → transform) | 编排多步流程,串联输出,查看逐步轨迹 |
+| 可观测性 | 审计日志 + 运行日志 + Token 统计 | 记录所有变更与模型调用,聚合运行指标 |
 
 ## 项目结构
 
@@ -82,6 +83,9 @@ docker compose up --build   # 构建前端 + 后端,访问 http://localhost:8080
 | POST | `/api/agents/:id/run` | 运行 Agent |
 | GET/POST/PUT/DELETE | `/api/workflows` `/api/workflows/:id` | Workflow 增删改查 |
 | POST | `/api/workflows/:id/run` | 运行 Workflow,返回逐步轨迹 |
+| GET | `/api/audit` | 审计日志(变更记录) |
+| GET | `/api/runs` | 运行日志(模型调用记录) |
+| GET | `/api/runs/stats` | 运行指标聚合(次数 / Token / 延迟) |
 | GET | `/ws` | WebSocket 热更新事件流 |
 
 除 `/api/login`、`/ws`、`/health` 外,所有 `/api/*` 需要

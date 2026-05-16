@@ -109,6 +109,7 @@ func (h *Handler) CreatePrompt(c *gin.Context) {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
 		return
 	}
+	h.recordAudit("create", "prompt", body.ID, body.Key, body.Name)
 	c.JSON(http.StatusOK, gin.H{"data": body})
 }
 
@@ -141,17 +142,21 @@ func (h *Handler) UpdatePrompt(c *gin.Context) {
 		return
 	}
 	h.notify(p, "prompt.updated")
+	h.recordAudit("update", "prompt", p.ID, p.Key, p.Name)
 	c.JSON(http.StatusOK, gin.H{"data": p})
 }
 
 // DeletePrompt removes a prompt and its version history.
 func (h *Handler) DeletePrompt(c *gin.Context) {
 	id := c.Param("id")
+	var p models.Prompt
+	h.db.First(&p, "id = ?", id)
 	if err := h.db.Delete(&models.Prompt{}, "id = ?", id).Error; err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
 		return
 	}
 	h.db.Delete(&models.PromptVersion{}, "prompt_id = ?", id)
+	h.recordAudit("delete", "prompt", id, p.Key, p.Name)
 	c.JSON(http.StatusOK, gin.H{"ok": true})
 }
 
@@ -194,6 +199,7 @@ func (h *Handler) PublishPrompt(c *gin.Context) {
 		return
 	}
 	h.notify(p, "prompt.published")
+	h.recordAudit("publish", "prompt", p.ID, p.Key, "version "+p.Version)
 	c.JSON(http.StatusOK, gin.H{"data": v})
 }
 
@@ -226,6 +232,7 @@ func (h *Handler) RollbackPrompt(c *gin.Context) {
 		return
 	}
 	h.notify(p, "prompt.updated")
+	h.recordAudit("rollback", "prompt", p.ID, p.Key, "to "+v.Version)
 	c.JSON(http.StatusOK, gin.H{"data": p})
 }
 

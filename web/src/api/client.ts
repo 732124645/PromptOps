@@ -83,6 +83,40 @@ export interface WorkflowRunResult {
   steps: { name: string; type: string; output: string }[]
 }
 
+export interface AuditEntry {
+  id: string
+  action: string
+  resource: string
+  resource_id: string
+  key: string
+  summary: string
+  created_at: string
+}
+
+export interface RunEntry {
+  id: string
+  source: string
+  ref_key: string
+  provider: string
+  model: string
+  prompt_tokens: number
+  output_tokens: number
+  latency_ms: number
+  status: string
+  error: string
+  created_at: string
+}
+
+export interface RunStats {
+  total: number
+  ok: number
+  error: number
+  prompt_tokens: number
+  output_tokens: number
+  avg_latency_ms: number
+  by_provider: { provider: string; count: number }[]
+}
+
 const http = axios.create({ baseURL: '/api' })
 
 http.interceptors.request.use((config) => {
@@ -134,6 +168,10 @@ export const api = {
   removeWorkflow: (id: string) => http.delete(`/workflows/${id}`),
   runWorkflow: (id: string, payload: { variables: Record<string, string>; api_key?: string }) =>
     http.post<WorkflowRunResult>(`/workflows/${id}/run`, payload),
+
+  listAudit: () => http.get<{ data: AuditEntry[] }>('/audit'),
+  listRuns: () => http.get<{ data: RunEntry[] }>('/runs'),
+  runStats: () => http.get<RunStats>('/runs/stats'),
 }
 
 export default http

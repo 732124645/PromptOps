@@ -52,3 +52,29 @@ type Workflow struct {
 	CreatedAt   time.Time `json:"created_at"`
 	UpdatedAt   time.Time `json:"updated_at"`
 }
+
+// AuditLog records a mutation to a prompt, agent or workflow.
+type AuditLog struct {
+	ID         string    `gorm:"primaryKey" json:"id"`
+	Action     string    `json:"action"`
+	Resource   string    `json:"resource"`
+	ResourceID string    `json:"resource_id"`
+	Key        string    `json:"key"`
+	Summary    string    `json:"summary"`
+	CreatedAt  time.Time `gorm:"index" json:"created_at"`
+}
+
+// RunLog records a single model invocation for observability.
+type RunLog struct {
+	ID           string    `gorm:"primaryKey" json:"id"`
+	Source       string    `json:"source"`
+	RefKey       string    `json:"ref_key"`
+	Provider     string    `json:"provider"`
+	Model        string    `json:"model"`
+	PromptTokens int       `json:"prompt_tokens"`
+	OutputTokens int       `json:"output_tokens"`
+	LatencyMs    int64     `json:"latency_ms"`
+	Status       string    `json:"status"`
+	Error        string    `json:"error"`
+	CreatedAt    time.Time `gorm:"index" json:"created_at"`
+}

@@ -92,6 +92,7 @@ func (h *Handler) CreateWorkflow(c *gin.Context) {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
 		return
 	}
+	h.recordAudit("create", "workflow", w.ID, w.Key, w.Name)
 	c.JSON(http.StatusOK, gin.H{"data": workflowResponse(w)})
 }
 
@@ -116,15 +117,20 @@ func (h *Handler) UpdateWorkflow(c *gin.Context) {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
 		return
 	}
+	h.recordAudit("update", "workflow", w.ID, w.Key, w.Name)
 	c.JSON(http.StatusOK, gin.H{"data": workflowResponse(w)})
 }
 
 // DeleteWorkflow removes a workflow.
 func (h *Handler) DeleteWorkflow(c *gin.Context) {
-	if err := h.db.Delete(&models.Workflow{}, "id = ?", c.Param("id")).Error; err != nil {
+	id := c.Param("id")
+	var existing models.Workflow
+	h.db.First(&existing, "id = ?", id)
+	if err := h.db.Delete(&models.Workflow{}, "id = ?", id).Error; err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
 		return
 	}
+	h.recordAudit("delete", "workflow", id, existing.Key, existing.Name)
 	c.JSON(http.StatusOK, gin.H{"ok": true})
 }
 
@@ -147,10 +153,13 @@ func (h *Handler) RunWorkflow(c *gin.Context) {
 		c.JSON(http.StatusBadRequest, gin.H{"error": "invalid body"})
 		return
 	}
+	start := time.Now()
 	result, err := workflow.Run(steps, body.Variables, body.APIKey)
 	if err != nil {
+		h.recordRun("workflow", w.Key, "workflow", w.Key, "", "", time.Since(start), err)
 		c.JSON(http.StatusBadGateway, gin.H{"error": err.Error()})
 		return
 	}
+	h.recordRun("workflow", w.Key, "workflow", w.Key, "", result.Output, time.Since(start), nil)
 	c.JSON(http.StatusOK, gin.H{"output": result.Output, "steps": result.Steps})
 }

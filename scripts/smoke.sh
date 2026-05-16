@@ -63,4 +63,11 @@ RUN="$(curl -sf -X POST "$BASE/api/workflows/$WF_ID/run" \
 echo "    response: $RUN"
 echo "$RUN" | grep -q 'HI WORLD' || { echo "FAIL: workflow chain output mismatch"; exit 1; }
 
+echo "==> observability (audit + run stats)"
+curl -sf "$BASE/api/audit" -H "Authorization: Bearer $TOKEN" | grep -q '"action"' \
+  || { echo "FAIL: no audit entries recorded"; exit 1; }
+STATS="$(curl -sf "$BASE/api/runs/stats" -H "Authorization: Bearer $TOKEN")"
+echo "    stats: $STATS"
+echo "$STATS" | grep -q '"total"' || { echo "FAIL: run stats missing"; exit 1; }
+
 echo "==> smoke test passed"

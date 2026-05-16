@@ -2,6 +2,7 @@ package handlers
 
 import (
 	"net/http"
+	"time"
 
 	"github.com/732124645/promptops/server/internal/models"
 	"github.com/732124645/promptops/server/internal/providers"
@@ -45,6 +46,7 @@ func (h *Handler) RunPlayground(c *gin.Context) {
 		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
 		return
 	}
+	start := time.Now()
 	result, err := prov.Run(providers.Request{
 		Model:   body.Model,
 		APIKey:  body.APIKey,
@@ -52,9 +54,11 @@ func (h *Handler) RunPlayground(c *gin.Context) {
 		Prompt:  rendered,
 	})
 	if err != nil {
+		h.recordRun("playground", "", body.Provider, body.Model, rendered, "", time.Since(start), err)
 		c.JSON(http.StatusBadGateway, gin.H{"error": err.Error(), "rendered": rendered})
 		return
 	}
+	h.recordRun("playground", "", result.Provider, result.Model, rendered, result.Output, time.Since(start), nil)
 	c.JSON(http.StatusOK, gin.H{"rendered": rendered, "result": result})
 }
 

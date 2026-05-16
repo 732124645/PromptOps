@@ -23,6 +23,11 @@ const router = createRouter({
       name: 'workflow-edit',
       component: () => import('../views/WorkflowEditView.vue'),
     },
+    {
+      path: '/observability',
+      name: 'observability',
+      component: () => import('../views/ObservabilityView.vue'),
+    },
   ],
 })
 
