@@ -4,6 +4,7 @@ import router from '../router'
 
 export interface Prompt {
   id: string
+  workspace_id?: string
   key: string
   name: string
   content: string
@@ -47,6 +48,7 @@ export interface PlaygroundResponse {
 
 export interface Agent {
   id: string
+  workspace_id?: string
   key: string
   name: string
   description: string
@@ -70,6 +72,7 @@ export interface WorkflowStep {
 
 export interface Workflow {
   id: string
+  workspace_id?: string
   key: string
   name: string
   description: string
@@ -134,6 +137,13 @@ export interface Rollout {
   weight_a: number
 }
 
+export interface Workspace {
+  id: string
+  name: string
+  slug: string
+  created_at: string
+}
+
 export interface LoginResponse {
   ok: boolean
   token: string
@@ -191,7 +201,13 @@ export const api = {
   runPlayground: (payload: PlaygroundRequest) =>
     http.post<PlaygroundResponse>('/playground/run', payload),
 
-  listAgents: () => http.get<{ data: Agent[] }>('/agents'),
+  listWorkspaces: () => http.get<{ data: Workspace[] }>('/workspaces'),
+  createWorkspace: (w: { name: string; slug?: string }) =>
+    http.post<{ data: Workspace }>('/workspaces', w),
+  removeWorkspace: (id: string) => http.delete(`/workspaces/${id}`),
+
+  listAgents: (params?: Record<string, string>) =>
+    http.get<{ data: Agent[] }>('/agents', { params }),
   getAgent: (id: string) => http.get<{ data: Agent }>(`/agents/${id}`),
   createAgent: (a: Partial<Agent>) => http.post<{ data: Agent }>('/agents', a),
   updateAgent: (id: string, a: Partial<Agent>) => http.put<{ data: Agent }>(`/agents/${id}`, a),
@@ -199,7 +215,8 @@ export const api = {
   runAgent: (id: string, payload: { variables: Record<string, string>; api_key?: string }) =>
     http.post<PlaygroundResponse>(`/agents/${id}/run`, payload),
 
-  listWorkflows: () => http.get<{ data: Workflow[] }>('/workflows'),
+  listWorkflows: (params?: Record<string, string>) =>
+    http.get<{ data: Workflow[] }>('/workflows', { params }),
   getWorkflow: (id: string) => http.get<{ data: Workflow }>(`/workflows/${id}`),
   createWorkflow: (w: Partial<Workflow>) => http.post<{ data: Workflow }>('/workflows', w),
   updateWorkflow: (id: string, w: Partial<Workflow>) =>

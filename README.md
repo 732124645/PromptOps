@@ -24,6 +24,7 @@ MVP、SDK / 热更新、Playground、Agent / Workflow 运行时、可观测性�
 | 可观测性 | 审计日志 + 运行日志 + Token 统计 | 记录所有变更与模型调用,聚合运行指标 |
 | 权限 (RBAC) | 用户 / 角色 / 会话(PBKDF2 口令) | admin / editor / viewer 三级角色,按角色控制接口 |
 | 灰度发布 | Rollout(按 key + 环境的 AB 流量切分) | SDK 获取 Prompt 时按权重返回两个版本之一 |
+| 团队空间 | Workspace | Prompt / Agent / Workflow 按工作区归组,前端可切换 |
 
 ## 项目结构
 
@@ -75,6 +76,7 @@ docker compose up --build   # 构建前端 + 后端,访问 http://localhost:8080
 | POST | `/api/login` | 登录(用户名 / 密码,或静态 Token) |
 | GET | `/api/me` | 当前用户与角色 |
 | GET/POST/PUT/DELETE | `/api/users` `/api/users/:id` | 用户管理(仅 admin) |
+| GET/POST/DELETE | `/api/workspaces` `/api/workspaces/:id` | 团队工作区管理 |
 | GET | `/api/prompts` | 列表 / 搜索(`q`、`env`、`category`、`tag`) |
 | POST | `/api/prompts` | 创建 |
 | GET/PUT/DELETE | `/api/prompts/:id` | 获取 / 更新 / 删除 |

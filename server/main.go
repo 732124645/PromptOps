@@ -26,6 +26,9 @@ func main() {
 	if err := h.SeedDefaultAdmin(); err != nil {
 		log.Fatalf("seed admin: %v", err)
 	}
+	if err := h.SeedDefaultWorkspace(); err != nil {
+		log.Fatalf("seed workspace: %v", err)
+	}
 
 	r := gin.Default()
 	r.Use(handlers.CORS())
@@ -56,6 +59,7 @@ func main() {
 		api.GET("/audit", h.ListAudit)
 		api.GET("/runs", h.ListRuns)
 		api.GET("/runs/stats", h.RunStats)
+		api.GET("/workspaces", h.ListWorkspaces)
 	}
 
 	// Mutating routes — editor and above.
@@ -75,6 +79,7 @@ func main() {
 		write.POST("/workflows", h.CreateWorkflow)
 		write.PUT("/workflows/:id", h.UpdateWorkflow)
 		write.DELETE("/workflows/:id", h.DeleteWorkflow)
+		write.POST("/workspaces", h.CreateWorkspace)
 	}
 
 	// User management — admin only.
@@ -85,6 +90,7 @@ func main() {
 		admin.POST("/users", h.CreateUser)
 		admin.PUT("/users/:id", h.UpdateUser)
 		admin.DELETE("/users/:id", h.DeleteUser)
+		admin.DELETE("/workspaces/:id", h.DeleteWorkspace)
 	}
 
 	// Serve the built Web UI if present (production single-binary mode).

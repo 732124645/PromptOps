@@ -1,6 +1,7 @@
 <script setup lang="ts">
-import { ref, onMounted, onBeforeUnmount } from 'vue'
+import { ref, watch, onMounted, onBeforeUnmount } from 'vue'
 import { useRouter } from 'vue-router'
+import { useWorkspaceStore } from '../stores/workspace'
 import {
   NButton,
   NInput,
@@ -18,6 +19,7 @@ import { api, type Prompt } from '../api/client'
 const router = useRouter()
 const message = useMessage()
 const dialog = useDialog()
+const workspace = useWorkspaceStore()
 
 const prompts = ref<Prompt[]>([])
 const q = ref('')
@@ -37,7 +39,7 @@ let socket: WebSocket | null = null
 async function load() {
   loading.value = true
   try {
-    const params: Record<string, string> = {}
+    const params: Record<string, string> = { workspace: workspace.currentId }
     if (q.value.trim()) params.q = q.value.trim()
     if (env.value) params.env = env.value
     const { data } = await api.list(params)
@@ -88,6 +90,8 @@ function connectWS() {
     live.value = false
   }
 }
+
+watch(() => workspace.currentId, load)
 
 onMounted(() => {
   load()

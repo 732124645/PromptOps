@@ -37,6 +37,9 @@ func (h *Handler) notify(p models.Prompt, event string) {
 // ListPrompts returns prompts filtered by free-text query, env, category and tag.
 func (h *Handler) ListPrompts(c *gin.Context) {
 	tx := h.db.Model(&models.Prompt{})
+	if ws := c.Query("workspace"); ws != "" {
+		tx = tx.Where("workspace_id = ?", ws)
+	}
 	if env := c.Query("env"); env != "" {
 		tx = tx.Where("env = ?", env)
 	}

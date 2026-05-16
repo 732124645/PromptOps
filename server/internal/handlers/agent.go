@@ -15,6 +15,9 @@ import (
 // ListAgents returns all agents, optionally filtered by a free-text query.
 func (h *Handler) ListAgents(c *gin.Context) {
 	tx := h.db.Model(&models.Agent{})
+	if ws := c.Query("workspace"); ws != "" {
+		tx = tx.Where("workspace_id = ?", ws)
+	}
 	if q := strings.TrimSpace(c.Query("q")); q != "" {
 		like := "%" + q + "%"
 		tx = tx.Where("key LIKE ? OR name LIKE ? OR description LIKE ?", like, like, like)

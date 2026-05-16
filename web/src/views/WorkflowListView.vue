@@ -1,12 +1,14 @@
 <script setup lang="ts">
-import { ref, onMounted } from 'vue'
+import { ref, watch, onMounted } from 'vue'
 import { useRouter } from 'vue-router'
 import { NButton, NTable, NEmpty, NSpin, NSpace, NTag, useMessage, useDialog } from 'naive-ui'
 import { api, type Workflow } from '../api/client'
+import { useWorkspaceStore } from '../stores/workspace'
 
 const router = useRouter()
 const message = useMessage()
 const dialog = useDialog()
+const workspace = useWorkspaceStore()
 
 const workflows = ref<Workflow[]>([])
 const loading = ref(false)
@@ -14,7 +16,7 @@ const loading = ref(false)
 async function load() {
   loading.value = true
   try {
-    const { data } = await api.listWorkflows()
+    const { data } = await api.listWorkflows({ workspace: workspace.currentId })
     workflows.value = data.data
   } catch {
     message.error('加载失败')
@@ -22,6 +24,8 @@ async function load() {
     loading.value = false
   }
 }
+
+watch(() => workspace.currentId, load)
 
 function edit(w: Workflow) {
   router.push({ name: 'workflow-edit', params: { id: w.id } })

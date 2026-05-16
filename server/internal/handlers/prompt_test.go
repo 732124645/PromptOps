@@ -25,6 +25,9 @@ func newTestRouter(t *testing.T) *gin.Engine {
 	if err := h.SeedDefaultAdmin(); err != nil {
 		t.Fatalf("seed admin: %v", err)
 	}
+	if err := h.SeedDefaultWorkspace(); err != nil {
+		t.Fatalf("seed workspace: %v", err)
+	}
 
 	r := gin.New()
 	r.POST("/api/login", h.Login)
@@ -50,6 +53,7 @@ func newTestRouter(t *testing.T) *gin.Engine {
 		api.GET("/audit", h.ListAudit)
 		api.GET("/runs", h.ListRuns)
 		api.GET("/runs/stats", h.RunStats)
+		api.GET("/workspaces", h.ListWorkspaces)
 	}
 
 	write := r.Group("/api")
@@ -68,6 +72,7 @@ func newTestRouter(t *testing.T) *gin.Engine {
 		write.POST("/workflows", h.CreateWorkflow)
 		write.PUT("/workflows/:id", h.UpdateWorkflow)
 		write.DELETE("/workflows/:id", h.DeleteWorkflow)
+		write.POST("/workspaces", h.CreateWorkspace)
 	}
 
 	admin := r.Group("/api")
@@ -77,6 +82,7 @@ func newTestRouter(t *testing.T) *gin.Engine {
 		admin.POST("/users", h.CreateUser)
 		admin.PUT("/users/:id", h.UpdateUser)
 		admin.DELETE("/users/:id", h.DeleteUser)
+		admin.DELETE("/workspaces/:id", h.DeleteWorkspace)
 	}
 	return r
 }

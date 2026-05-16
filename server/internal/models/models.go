@@ -2,19 +2,28 @@ package models
 
 import "time"
 
+// Workspace is a team space that groups prompts, agents and workflows.
+type Workspace struct {
+	ID        string    `gorm:"primaryKey" json:"id"`
+	Name      string    `json:"name"`
+	Slug      string    `json:"slug"`
+	CreatedAt time.Time `json:"created_at"`
+}
+
 // Prompt is the core resource: a versioned, environment-scoped prompt.
 type Prompt struct {
-	ID        string    `gorm:"primaryKey" json:"id"`
-	Key       string    `gorm:"index" json:"key"`
-	Name      string    `json:"name"`
-	Content   string    `json:"content"`
-	Version   string    `json:"version"`
-	Env       string    `gorm:"index" json:"env"`
-	Category  string    `gorm:"index" json:"category"`
-	Tags      string    `json:"tags"`
-	Model     string    `json:"model"`
-	CreatedAt time.Time `json:"created_at"`
-	UpdatedAt time.Time `json:"updated_at"`
+	ID          string    `gorm:"primaryKey" json:"id"`
+	WorkspaceID string    `gorm:"index" json:"workspace_id"`
+	Key         string    `gorm:"index" json:"key"`
+	Name        string    `json:"name"`
+	Content     string    `json:"content"`
+	Version     string    `json:"version"`
+	Env         string    `gorm:"index" json:"env"`
+	Category    string    `gorm:"index" json:"category"`
+	Tags        string    `json:"tags"`
+	Model       string    `json:"model"`
+	CreatedAt   time.Time `json:"created_at"`
+	UpdatedAt   time.Time `json:"updated_at"`
 }
 
 // PromptVersion is an immutable snapshot of a prompt's content, created on publish.
@@ -31,6 +40,7 @@ type PromptVersion struct {
 // Agent is a reusable, config-driven prompt + model setup.
 type Agent struct {
 	ID          string    `gorm:"primaryKey" json:"id"`
+	WorkspaceID string    `gorm:"index" json:"workspace_id"`
 	Key         string    `gorm:"index" json:"key"`
 	Name        string    `json:"name"`
 	Description string    `json:"description"`
@@ -45,6 +55,7 @@ type Agent struct {
 // of workflow steps; handlers expose it as a structured "steps" field.
 type Workflow struct {
 	ID          string    `gorm:"primaryKey" json:"id"`
+	WorkspaceID string    `gorm:"index" json:"workspace_id"`
 	Key         string    `gorm:"index" json:"key"`
 	Name        string    `json:"name"`
 	Description string    `json:"description"`

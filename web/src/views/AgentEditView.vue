@@ -16,10 +16,12 @@ import {
   useMessage,
 } from 'naive-ui'
 import { api, type Agent, type PlaygroundResponse } from '../api/client'
+import { useWorkspaceStore } from '../stores/workspace'
 
 const route = useRoute()
 const router = useRouter()
 const message = useMessage()
+const workspace = useWorkspaceStore()
 
 const isNew = computed(() => !route.params.id)
 const id = ref<string>((route.params.id as string) || '')
@@ -72,7 +74,10 @@ async function save() {
   saving.value = true
   try {
     if (isNew.value) {
-      const { data } = await api.createAgent(form.value)
+      const { data } = await api.createAgent({
+        ...form.value,
+        workspace_id: workspace.currentId,
+      })
       id.value = data.data.id
       message.success('已创建')
       router.replace({ name: 'agent-edit', params: { id: id.value } })

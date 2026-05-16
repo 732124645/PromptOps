@@ -16,6 +16,7 @@ type workflowBody struct {
 	Key         string          `json:"key"`
 	Name        string          `json:"name"`
 	Description string          `json:"description"`
+	WorkspaceID string          `json:"workspace_id"`
 	Steps       []workflow.Step `json:"steps"`
 }
 
@@ -27,19 +28,23 @@ func workflowResponse(w models.Workflow) gin.H {
 		_ = json.Unmarshal([]byte(w.Steps), &steps)
 	}
 	return gin.H{
-		"id":          w.ID,
-		"key":         w.Key,
-		"name":        w.Name,
-		"description": w.Description,
-		"steps":       steps,
-		"created_at":  w.CreatedAt,
-		"updated_at":  w.UpdatedAt,
+		"id":           w.ID,
+		"workspace_id": w.WorkspaceID,
+		"key":          w.Key,
+		"name":         w.Name,
+		"description":  w.Description,
+		"steps":        steps,
+		"created_at":   w.CreatedAt,
+		"updated_at":   w.UpdatedAt,
 	}
 }
 
 // ListWorkflows returns all workflows, optionally filtered by a free-text query.
 func (h *Handler) ListWorkflows(c *gin.Context) {
 	tx := h.db.Model(&models.Workflow{})
+	if ws := c.Query("workspace"); ws != "" {
+		tx = tx.Where("workspace_id = ?", ws)
+	}
 	if q := strings.TrimSpace(c.Query("q")); q != "" {
 		like := "%" + q + "%"
 		tx = tx.Where("key LIKE ? OR name LIKE ? OR description LIKE ?", like, like, like)
@@ -81,6 +86,7 @@ func (h *Handler) CreateWorkflow(c *gin.Context) {
 	now := time.Now()
 	w := models.Workflow{
 		ID:          uuid.NewString(),
+		WorkspaceID: body.WorkspaceID,
 		Key:         body.Key,
 		Name:        body.Name,
 		Description: body.Description,
