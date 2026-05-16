@@ -39,6 +39,18 @@ func newTestRouter(t *testing.T) *gin.Engine {
 		api.GET("/sdk/prompts/:key", h.SDKGetPrompt)
 		api.POST("/playground/run", h.RunPlayground)
 		api.GET("/playground/providers", h.ListProviders)
+		api.GET("/agents", h.ListAgents)
+		api.POST("/agents", h.CreateAgent)
+		api.GET("/agents/:id", h.GetAgent)
+		api.PUT("/agents/:id", h.UpdateAgent)
+		api.DELETE("/agents/:id", h.DeleteAgent)
+		api.POST("/agents/:id/run", h.RunAgent)
+		api.GET("/workflows", h.ListWorkflows)
+		api.POST("/workflows", h.CreateWorkflow)
+		api.GET("/workflows/:id", h.GetWorkflow)
+		api.PUT("/workflows/:id", h.UpdateWorkflow)
+		api.DELETE("/workflows/:id", h.DeleteWorkflow)
+		api.POST("/workflows/:id/run", h.RunWorkflow)
 	}
 	return r
 }

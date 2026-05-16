@@ -27,3 +27,28 @@ type PromptVersion struct {
 	Content   string    `json:"content"`
 	CreatedAt time.Time `json:"created_at"`
 }
+
+// Agent is a reusable, config-driven prompt + model setup.
+type Agent struct {
+	ID          string    `gorm:"primaryKey" json:"id"`
+	Key         string    `gorm:"index" json:"key"`
+	Name        string    `json:"name"`
+	Description string    `json:"description"`
+	Prompt      string    `json:"prompt"`
+	Provider    string    `json:"provider"`
+	Model       string    `json:"model"`
+	CreatedAt   time.Time `json:"created_at"`
+	UpdatedAt   time.Time `json:"updated_at"`
+}
+
+// Workflow is an ordered pipeline of steps. Steps holds a JSON-encoded array
+// of workflow steps; handlers expose it as a structured "steps" field.
+type Workflow struct {
+	ID          string    `gorm:"primaryKey" json:"id"`
+	Key         string    `gorm:"index" json:"key"`
+	Name        string    `json:"name"`
+	Description string    `json:"description"`
+	Steps       string    `json:"-"`
+	CreatedAt   time.Time `json:"created_at"`
+	UpdatedAt   time.Time `json:"updated_at"`
+}

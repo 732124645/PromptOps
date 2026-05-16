@@ -9,6 +9,20 @@ const router = createRouter({
     { path: '/prompts/new', name: 'prompt-new', component: () => import('../views/PromptEditView.vue') },
     { path: '/prompts/:id', name: 'prompt-edit', component: () => import('../views/PromptEditView.vue') },
     { path: '/playground', name: 'playground', component: () => import('../views/PlaygroundView.vue') },
+    { path: '/agents', name: 'agents', component: () => import('../views/AgentListView.vue') },
+    { path: '/agents/new', name: 'agent-new', component: () => import('../views/AgentEditView.vue') },
+    { path: '/agents/:id', name: 'agent-edit', component: () => import('../views/AgentEditView.vue') },
+    { path: '/workflows', name: 'workflows', component: () => import('../views/WorkflowListView.vue') },
+    {
+      path: '/workflows/new',
+      name: 'workflow-new',
+      component: () => import('../views/WorkflowEditView.vue'),
+    },
+    {
+      path: '/workflows/:id',
+      name: 'workflow-edit',
+      component: () => import('../views/WorkflowEditView.vue'),
+    },
   ],
 })
 

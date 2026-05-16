@@ -51,4 +51,16 @@ echo "    response: $PG"
 echo "$PG" | grep -q 'Hi world' || { echo "FAIL: playground did not render variables"; exit 1; }
 echo "$PG" | grep -q 'mock completion' || { echo "FAIL: playground output mismatch"; exit 1; }
 
+echo "==> workflow run (render -> model -> transform)"
+WF="$(curl -sf -X POST "$BASE/api/workflows" \
+  -H "Authorization: Bearer $TOKEN" -H 'Content-Type: application/json' \
+  -d '{"key":"smoke.flow","name":"Smoke Flow","steps":[{"name":"build","type":"render","template":"hi {{who}}"},{"name":"call","type":"model","provider":"mock"},{"name":"shout","type":"transform","op":"upper"}]}')"
+WF_ID="$(echo "$WF" | grep -o '"id":"[^"]*"' | head -1 | cut -d'"' -f4)"
+[ -n "$WF_ID" ] || { echo "FAIL: workflow not created"; exit 1; }
+RUN="$(curl -sf -X POST "$BASE/api/workflows/$WF_ID/run" \
+  -H "Authorization: Bearer $TOKEN" -H 'Content-Type: application/json' \
+  -d '{"variables":{"who":"world"}}')"
+echo "    response: $RUN"
+echo "$RUN" | grep -q 'HI WORLD' || { echo "FAIL: workflow chain output mismatch"; exit 1; }
+
 echo "==> smoke test passed"

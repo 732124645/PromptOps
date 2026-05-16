@@ -10,10 +10,15 @@ const auth = useAuthStore()
 
 const showHeader = computed(() => route.name !== 'login')
 
-function isActive(section: 'prompts' | 'playground') {
+function isActive(section: 'prompts' | 'playground' | 'agents' | 'workflows') {
   const name = String(route.name || '')
-  if (section === 'playground') return name === 'playground'
-  return ['prompts', 'prompt-new', 'prompt-edit'].includes(name)
+  const groups: Record<string, string[]> = {
+    prompts: ['prompts', 'prompt-new', 'prompt-edit'],
+    playground: ['playground'],
+    agents: ['agents', 'agent-new', 'agent-edit'],
+    workflows: ['workflows', 'workflow-new', 'workflow-edit'],
+  }
+  return groups[section].includes(name)
 }
 
 function logout() {
@@ -32,6 +37,10 @@ function logout() {
         </div>
         <nav class="nav">
           <a :class="{ active: isActive('prompts') }" @click="router.push('/')">Prompts</a>
+          <a :class="{ active: isActive('agents') }" @click="router.push('/agents')">Agents</a>
+          <a :class="{ active: isActive('workflows') }" @click="router.push('/workflows')">
+            Workflows
+          </a>
           <a :class="{ active: isActive('playground') }" @click="router.push('/playground')">
             Playground
           </a>
