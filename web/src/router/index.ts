@@ -28,6 +28,7 @@ const router = createRouter({
       name: 'observability',
       component: () => import('../views/ObservabilityView.vue'),
     },
+    { path: '/users', name: 'users', component: () => import('../views/UsersView.vue') },
   ],
 })
 
@@ -35,6 +36,7 @@ router.beforeEach((to) => {
   const auth = useAuthStore()
   if (to.name !== 'login' && !auth.token) return { name: 'login' }
   if (to.name === 'login' && auth.token) return { name: 'prompts' }
+  if (to.name === 'users' && auth.role !== 'admin') return { name: 'prompts' }
   return true
 })
 

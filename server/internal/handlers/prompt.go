@@ -34,22 +34,6 @@ func (h *Handler) notify(p models.Prompt, event string) {
 	h.hub.Broadcast(msg)
 }
 
-// Login validates the admin token used by the Web UI.
-func (h *Handler) Login(c *gin.Context) {
-	var body struct {
-		Token string `json:"token"`
-	}
-	if err := c.ShouldBindJSON(&body); err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{"error": "invalid body"})
-		return
-	}
-	if body.Token != authToken() {
-		c.JSON(http.StatusUnauthorized, gin.H{"error": "invalid token"})
-		return
-	}
-	c.JSON(http.StatusOK, gin.H{"ok": true, "token": body.Token})
-}
-
 // ListPrompts returns prompts filtered by free-text query, env, category and tag.
 func (h *Handler) ListPrompts(c *gin.Context) {
 	tx := h.db.Model(&models.Prompt{})

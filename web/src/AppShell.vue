@@ -1,8 +1,9 @@
 <script setup lang="ts">
 import { computed } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
-import { NLayout, NLayoutHeader, NLayoutContent, NButton } from 'naive-ui'
+import { NLayout, NLayoutHeader, NLayoutContent, NButton, NTag } from 'naive-ui'
 import { useAuthStore } from './stores/auth'
+import { api } from './api/client'
 
 const route = useRoute()
 const router = useRouter()
@@ -10,7 +11,9 @@ const auth = useAuthStore()
 
 const showHeader = computed(() => route.name !== 'login')
 
-function isActive(section: 'prompts' | 'playground' | 'agents' | 'workflows' | 'observability') {
+function isActive(
+  section: 'prompts' | 'playground' | 'agents' | 'workflows' | 'observability' | 'users',
+) {
   const name = String(route.name || '')
   const groups: Record<string, string[]> = {
     prompts: ['prompts', 'prompt-new', 'prompt-edit'],
@@ -18,11 +21,13 @@ function isActive(section: 'prompts' | 'playground' | 'agents' | 'workflows' | '
     agents: ['agents', 'agent-new', 'agent-edit'],
     workflows: ['workflows', 'workflow-new', 'workflow-edit'],
     observability: ['observability'],
+    users: ['users'],
   }
   return groups[section].includes(name)
 }
 
-function logout() {
+async function logout() {
+  await api.logout().catch(() => {})
   auth.clear()
   router.push({ name: 'login' })
 }
@@ -51,9 +56,20 @@ function logout() {
           >
             观测
           </a>
+          <a
+            v-if="auth.isAdmin"
+            :class="{ active: isActive('users') }"
+            @click="router.push('/users')"
+          >
+            用户
+          </a>
         </nav>
       </div>
-      <n-button quaternary size="small" @click="logout">退出登录</n-button>
+      <div class="right">
+        <span class="who">{{ auth.username || '—' }}</span>
+        <n-tag size="tiny" :type="auth.isAdmin ? 'success' : 'default'">{{ auth.role }}</n-tag>
+        <n-button quaternary size="small" @click="logout">退出登录</n-button>
+      </div>
     </n-layout-header>
     <n-layout-content :content-style="'min-height: 100%'">
       <router-view />
@@ -94,6 +110,15 @@ function logout() {
 }
 .nav a.active {
   color: #63e2b7;
+}
+.right {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+.who {
+  font-size: 13px;
+  color: #aaa;
 }
 .tag {
   font-size: 11px;

@@ -117,6 +117,20 @@ export interface RunStats {
   by_provider: { provider: string; count: number }[]
 }
 
+export interface User {
+  id: string
+  username: string
+  role: string
+  created_at: string
+}
+
+export interface LoginResponse {
+  ok: boolean
+  token: string
+  role: string
+  username: string
+}
+
 const http = axios.create({ baseURL: '/api' })
 
 http.interceptors.request.use((config) => {
@@ -139,7 +153,16 @@ http.interceptors.response.use(
 )
 
 export const api = {
-  login: (token: string) => http.post('/login', { token }),
+  login: (payload: { username?: string; password?: string; token?: string }) =>
+    http.post<LoginResponse>('/login', payload),
+  logout: () => http.post('/logout'),
+  me: () => http.get<{ username: string; role: string }>('/me'),
+  listUsers: () => http.get<{ data: User[] }>('/users'),
+  createUser: (u: { username: string; password: string; role: string }) =>
+    http.post<{ data: User }>('/users', u),
+  updateUser: (id: string, u: { password?: string; role?: string }) =>
+    http.put<{ data: User }>(`/users/${id}`, u),
+  removeUser: (id: string) => http.delete(`/users/${id}`),
   list: (params: Record<string, string>) => http.get<{ data: Prompt[] }>('/prompts', { params }),
   get: (id: string) => http.get<{ data: Prompt }>(`/prompts/${id}`),
   create: (p: Partial<Prompt>) => http.post<{ data: Prompt }>('/prompts', p),

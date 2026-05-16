@@ -22,10 +22,16 @@ done
 curl -sf "$BASE/health" >/dev/null || { echo "FAIL: server did not start"; exit 1; }
 echo "    health OK"
 
-echo "==> login"
+echo "==> login (static token)"
 curl -sf -X POST "$BASE/api/login" -H 'Content-Type: application/json' \
   -d "{\"token\":\"$TOKEN\"}" >/dev/null
-echo "    login OK"
+echo "    token login OK"
+
+echo "==> login (seeded admin account)"
+curl -sf -X POST "$BASE/api/login" -H 'Content-Type: application/json' \
+  -d '{"username":"admin","password":"admin"}' | grep -q '"role":"admin"' \
+  || { echo "FAIL: seeded admin login"; exit 1; }
+echo "    user login OK"
 
 echo "==> create prompt"
 curl -sf -X POST "$BASE/api/prompts" \

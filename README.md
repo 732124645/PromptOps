@@ -22,6 +22,7 @@ MVP、SDK / 热更新、Playground、Agent / Workflow 运行时、可观测性�
 | Agent | 配置化 Agent(Prompt + 提供方 + 模型) | 保存可复用配置并一键运行 |
 | Workflow | 步骤引擎(render → model → transform) | 编排多步流程,串联输出,查看逐步轨迹 |
 | 可观测性 | 审计日志 + 运行日志 + Token 统计 | 记录所有变更与模型调用,聚合运行指标 |
+| 权限 (RBAC) | 用户 / 角色 / 会话(PBKDF2 口令) | admin / editor / viewer 三级角色,按角色控制接口 |
 
 ## 项目结构
 
@@ -57,7 +58,8 @@ npm install
 npm run dev         # http://localhost:5173,已配置代理到后端 :8080
 ```
 
-默认登录 Token:`promptops-dev-token`。
+默认登录账号:`admin` / `admin`(首次启动自动创建)。静态 Token
+`promptops-dev-token` 仍可作为管理员凭据,供 SDK 与脚本使用。
 
 ## Docker 部署
 
@@ -69,7 +71,9 @@ docker compose up --build   # 构建前端 + 后端,访问 http://localhost:8080
 
 | 方法 | 路径 | 说明 |
 |---|---|---|
-| POST | `/api/login` | Token 登录 |
+| POST | `/api/login` | 登录(用户名 / 密码,或静态 Token) |
+| GET | `/api/me` | 当前用户与角色 |
+| GET/POST/PUT/DELETE | `/api/users` `/api/users/:id` | 用户管理(仅 admin) |
 | GET | `/api/prompts` | 列表 / 搜索(`q`、`env`、`category`、`tag`) |
 | POST | `/api/prompts` | 创建 |
 | GET/PUT/DELETE | `/api/prompts/:id` | 获取 / 更新 / 删除 |
@@ -89,7 +93,8 @@ docker compose up --build   # 构建前端 + 后端,访问 http://localhost:8080
 | GET | `/ws` | WebSocket 热更新事件流 |
 
 除 `/api/login`、`/ws`、`/health` 外,所有 `/api/*` 需要
-`Authorization: Bearer <token>`。
+`Authorization: Bearer <token>`。写操作需 `editor` 及以上角色,用户管理需
+`admin` 角色;`viewer` 仅可读与运行。
 
 ## SDK
 

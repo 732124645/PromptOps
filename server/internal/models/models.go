@@ -64,6 +64,22 @@ type AuditLog struct {
 	CreatedAt  time.Time `gorm:"index" json:"created_at"`
 }
 
+// User is an account with a role: "admin", "editor" or "viewer".
+type User struct {
+	ID           string    `gorm:"primaryKey" json:"id"`
+	Username     string    `gorm:"uniqueIndex" json:"username"`
+	PasswordHash string    `json:"-"`
+	Role         string    `json:"role"`
+	CreatedAt    time.Time `json:"created_at"`
+}
+
+// Session maps an opaque bearer token to a user.
+type Session struct {
+	Token     string    `gorm:"primaryKey" json:"-"`
+	UserID    string    `gorm:"index" json:"user_id"`
+	CreatedAt time.Time `json:"created_at"`
+}
+
 // RunLog records a single model invocation for observability.
 type RunLog struct {
 	ID           string    `gorm:"primaryKey" json:"id"`

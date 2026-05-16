@@ -9,21 +9,25 @@ const router = useRouter()
 const auth = useAuthStore()
 const message = useMessage()
 
-const token = ref('')
+const username = ref('')
+const password = ref('')
 const loading = ref(false)
 
 async function login() {
-  if (!token.value) {
-    message.warning('请输入访问 Token')
+  if (!username.value || !password.value) {
+    message.warning('请输入用户名和密码')
     return
   }
   loading.value = true
   try {
-    await api.login(token.value)
-    auth.setToken(token.value)
+    const { data } = await api.login({
+      username: username.value,
+      password: password.value,
+    })
+    auth.setSession(data.token, data.role, data.username)
     router.push({ name: 'prompts' })
   } catch {
-    message.error('Token 无效')
+    message.error('用户名或密码错误')
   } finally {
     loading.value = false
   }
@@ -36,18 +40,21 @@ async function login() {
       <div class="title">PromptOps</div>
       <div class="subtitle">AI Prompt Runtime 平台</div>
       <n-form @submit.prevent="login">
-        <n-form-item label="访问 Token">
+        <n-form-item label="用户名">
+          <n-input v-model:value="username" placeholder="用户名" @keyup.enter="login" />
+        </n-form-item>
+        <n-form-item label="密码">
           <n-input
-            v-model:value="token"
+            v-model:value="password"
             type="password"
             show-password-on="click"
-            placeholder="默认: promptops-dev-token"
+            placeholder="密码"
             @keyup.enter="login"
           />
         </n-form-item>
         <n-button type="primary" block :loading="loading" @click="login">登录</n-button>
       </n-form>
-      <div class="hint">默认 Token: <code>promptops-dev-token</code>(可用 PROMPTOPS_TOKEN 配置)</div>
+      <div class="hint">默认管理员账号:<code>admin</code> / <code>admin</code></div>
     </n-card>
   </div>
 </template>
