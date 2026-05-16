@@ -34,25 +34,12 @@ func (h *Handler) notify(p models.Prompt, event string) {
 	h.hub.Broadcast(msg)
 }
 
-// Login validates the admin token used by the Web UI.
-func (h *Handler) Login(c *gin.Context) {
-	var body struct {
-		Token string `json:"token"`
-	}
-	if err := c.ShouldBindJSON(&body); err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{"error": "invalid body"})
-		return
-	}
-	if body.Token != authToken() {
-		c.JSON(http.StatusUnauthorized, gin.H{"error": "invalid token"})
-		return
-	}
-	c.JSON(http.StatusOK, gin.H{"ok": true, "token": body.Token})
-}
-
 // ListPrompts returns prompts filtered by free-text query, env, category and tag.
 func (h *Handler) ListPrompts(c *gin.Context) {
 	tx := h.db.Model(&models.Prompt{})
+	if ws := c.Query("workspace"); ws != "" {
+		tx = tx.Where("workspace_id = ?", ws)
+	}
 	if env := c.Query("env"); env != "" {
 		tx = tx.Where("env = ?", env)
 	}
@@ -109,6 +96,7 @@ func (h *Handler) CreatePrompt(c *gin.Context) {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
 		return
 	}
+	h.recordAudit("create", "prompt", body.ID, body.Key, body.Name)
 	c.JSON(http.StatusOK, gin.H{"data": body})
 }
 
@@ -141,17 +129,21 @@ func (h *Handler) UpdatePrompt(c *gin.Context) {
 		return
 	}
 	h.notify(p, "prompt.updated")
+	h.recordAudit("update", "prompt", p.ID, p.Key, p.Name)
 	c.JSON(http.StatusOK, gin.H{"data": p})
 }
 
 // DeletePrompt removes a prompt and its version history.
 func (h *Handler) DeletePrompt(c *gin.Context) {
 	id := c.Param("id")
+	var p models.Prompt
+	h.db.First(&p, "id = ?", id)
 	if err := h.db.Delete(&models.Prompt{}, "id = ?", id).Error; err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
 		return
 	}
 	h.db.Delete(&models.PromptVersion{}, "prompt_id = ?", id)
+	h.recordAudit("delete", "prompt", id, p.Key, p.Name)
 	c.JSON(http.StatusOK, gin.H{"ok": true})
 }
 
@@ -194,6 +186,7 @@ func (h *Handler) PublishPrompt(c *gin.Context) {
 		return
 	}
 	h.notify(p, "prompt.published")
+	h.recordAudit("publish", "prompt", p.ID, p.Key, "version "+p.Version)
 	c.JSON(http.StatusOK, gin.H{"data": v})
 }
 
@@ -226,6 +219,7 @@ func (h *Handler) RollbackPrompt(c *gin.Context) {
 		return
 	}
 	h.notify(p, "prompt.updated")
+	h.recordAudit("rollback", "prompt", p.ID, p.Key, "to "+v.Version)
 	c.JSON(http.StatusOK, gin.H{"data": p})
 }
 
@@ -238,11 +232,34 @@ func (h *Handler) SDKGetPrompt(c *gin.Context) {
 		c.JSON(http.StatusNotFound, gin.H{"error": "not found"})
 		return
 	}
-	c.JSON(http.StatusOK, gin.H{
+
+	content := p.Content
+	version := p.Version
+	variant := ""
+
+	// Apply a gray-release rollout: weighted pick between two published versions.
+	var ro models.Rollout
+	if err := h.db.Where("key = ? AND env = ? AND enabled = ?", key, env, true).
+		First(&ro).Error; err == nil {
+		picked, label := pickVariant(ro)
+		var pv models.PromptVersion
+		if err := h.db.Where("key = ? AND env = ? AND version = ?", key, env, picked).
+			Order("created_at desc").First(&pv).Error; err == nil {
+			content = pv.Content
+			version = pv.Version
+			variant = label
+		}
+	}
+
+	resp := gin.H{
 		"key":     p.Key,
-		"version": p.Version,
+		"version": version,
 		"env":     p.Env,
 		"model":   p.Model,
-		"content": p.Content,
-	})
+		"content": content,
+	}
+	if variant != "" {
+		resp["variant"] = variant
+	}
+	c.JSON(http.StatusOK, resp)
 }

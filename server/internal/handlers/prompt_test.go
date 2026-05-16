@@ -22,21 +22,67 @@ func newTestRouter(t *testing.T) *gin.Engine {
 	hub := ws.NewHub()
 	go hub.Run()
 	h := New(database, hub)
+	if err := h.SeedDefaultAdmin(); err != nil {
+		t.Fatalf("seed admin: %v", err)
+	}
+	if err := h.SeedDefaultWorkspace(); err != nil {
+		t.Fatalf("seed workspace: %v", err)
+	}
 
 	r := gin.New()
 	r.POST("/api/login", h.Login)
+
 	api := r.Group("/api")
-	api.Use(Auth())
+	api.Use(h.Authenticate())
 	{
+		api.GET("/me", h.Me)
+		api.POST("/logout", h.Logout)
 		api.GET("/prompts", h.ListPrompts)
-		api.POST("/prompts", h.CreatePrompt)
-		api.POST("/prompts/publish", h.PublishPrompt)
-		api.POST("/prompts/rollback", h.RollbackPrompt)
 		api.GET("/prompts/:id", h.GetPrompt)
-		api.PUT("/prompts/:id", h.UpdatePrompt)
-		api.DELETE("/prompts/:id", h.DeletePrompt)
 		api.GET("/prompts/:id/versions", h.ListVersions)
+		api.GET("/prompts/:id/rollout", h.GetRollout)
 		api.GET("/sdk/prompts/:key", h.SDKGetPrompt)
+		api.GET("/playground/providers", h.ListProviders)
+		api.POST("/playground/run", h.RunPlayground)
+		api.GET("/agents", h.ListAgents)
+		api.GET("/agents/:id", h.GetAgent)
+		api.POST("/agents/:id/run", h.RunAgent)
+		api.GET("/workflows", h.ListWorkflows)
+		api.GET("/workflows/:id", h.GetWorkflow)
+		api.POST("/workflows/:id/run", h.RunWorkflow)
+		api.GET("/audit", h.ListAudit)
+		api.GET("/runs", h.ListRuns)
+		api.GET("/runs/stats", h.RunStats)
+		api.GET("/workspaces", h.ListWorkspaces)
+	}
+
+	write := r.Group("/api")
+	write.Use(h.Authenticate(), h.RequireRole("editor"))
+	{
+		write.POST("/prompts", h.CreatePrompt)
+		write.PUT("/prompts/:id", h.UpdatePrompt)
+		write.DELETE("/prompts/:id", h.DeletePrompt)
+		write.POST("/prompts/publish", h.PublishPrompt)
+		write.POST("/prompts/rollback", h.RollbackPrompt)
+		write.PUT("/prompts/:id/rollout", h.SetRollout)
+		write.DELETE("/prompts/:id/rollout", h.DeleteRollout)
+		write.POST("/agents", h.CreateAgent)
+		write.PUT("/agents/:id", h.UpdateAgent)
+		write.DELETE("/agents/:id", h.DeleteAgent)
+		write.POST("/workflows", h.CreateWorkflow)
+		write.PUT("/workflows/:id", h.UpdateWorkflow)
+		write.DELETE("/workflows/:id", h.DeleteWorkflow)
+		write.POST("/workspaces", h.CreateWorkspace)
+	}
+
+	admin := r.Group("/api")
+	admin.Use(h.Authenticate(), h.RequireRole("admin"))
+	{
+		admin.GET("/users", h.ListUsers)
+		admin.POST("/users", h.CreateUser)
+		admin.PUT("/users/:id", h.UpdateUser)
+		admin.DELETE("/users/:id", h.DeleteUser)
+		admin.DELETE("/workspaces/:id", h.DeleteWorkspace)
 	}
 	return r
 }

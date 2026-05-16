@@ -20,7 +20,11 @@ func Open(path string) (*gorm.DB, error) {
 	if err != nil {
 		return nil, err
 	}
-	if err := d.AutoMigrate(&models.Prompt{}, &models.PromptVersion{}); err != nil {
+	if err := d.AutoMigrate(
+		&models.Prompt{}, &models.PromptVersion{}, &models.Agent{},
+		&models.Workflow{}, &models.AuditLog{}, &models.RunLog{},
+		&models.User{}, &models.Session{}, &models.Rollout{}, &models.Workspace{},
+	); err != nil {
 		return nil, err
 	}
 	return d, nil

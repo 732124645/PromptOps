@@ -10,14 +10,21 @@ Workflow 从代码中解耦出来,让 AI 应用支持 Prompt 的热更新、版�
 
 ## 当前进度
 
-第一阶段 MVP + 第二阶段 SDK / 热更新已完成。
+MVP、SDK / 热更新、Playground、Agent / Workflow 运行时、可观测性与审计均已完成。
 
 | 模块 | 技术栈 | 说明 |
 |---|---|---|
 | 后端 | Go + Gin + GORM + SQLite | Prompt CRUD / 搜索 / 版本管理 / 多环境 / SDK 接口 |
 | 热更新 | WebSocket (`/ws`) | Prompt 变更实时推送给已连接客户端 |
-| 前端 | Vue3 + Vite + Naive UI + Pinia | 登录页 / Prompt 列表页 / Prompt 编辑页 |
+| 前端 | Vue3 + Vite + Naive UI + Pinia | Prompt / Agent / Workflow / Playground / 观测 页面 |
 | SDK | Node / Python / Java(均零依赖) | 按 key 获取 Prompt、模板渲染、WebSocket 热更新 |
+| Playground | 模型网关(mock / OpenAI / Claude / Ollama / Gemini) | 填变量、调用模型、查看结果;版本 Diff 对比 |
+| Agent | 配置化 Agent(Prompt + 提供方 + 模型) | 保存可复用配置并一键运行 |
+| Workflow | 步骤引擎(render → model → transform) | 编排多步流程,串联输出,查看逐步轨迹 |
+| 可观测性 | 审计日志 + 运行日志 + Token 统计 | 记录所有变更与模型调用,聚合运行指标 |
+| 权限 (RBAC) | 用户 / 角色 / 会话(PBKDF2 口令) | admin / editor / viewer 三级角色,按角色控制接口 |
+| 灰度发布 | Rollout(按 key + 环境的 AB 流量切分) | SDK 获取 Prompt 时按权重返回两个版本之一 |
+| 团队空间 | Workspace | Prompt / Agent / Workflow 按工作区归组,前端可切换 |
 
 ## 项目结构
 
@@ -53,7 +60,8 @@ npm install
 npm run dev         # http://localhost:5173,已配置代理到后端 :8080
 ```
 
-默认登录 Token:`promptops-dev-token`。
+默认登录账号:`admin` / `admin`(首次启动自动创建)。静态 Token
+`promptops-dev-token` 仍可作为管理员凭据,供 SDK 与脚本使用。
 
 ## Docker 部署
 
@@ -65,18 +73,32 @@ docker compose up --build   # 构建前端 + 后端,访问 http://localhost:8080
 
 | 方法 | 路径 | 说明 |
 |---|---|---|
-| POST | `/api/login` | Token 登录 |
+| POST | `/api/login` | 登录(用户名 / 密码,或静态 Token) |
+| GET | `/api/me` | 当前用户与角色 |
+| GET/POST/PUT/DELETE | `/api/users` `/api/users/:id` | 用户管理(仅 admin) |
+| GET/POST/DELETE | `/api/workspaces` `/api/workspaces/:id` | 团队工作区管理 |
 | GET | `/api/prompts` | 列表 / 搜索(`q`、`env`、`category`、`tag`) |
 | POST | `/api/prompts` | 创建 |
 | GET/PUT/DELETE | `/api/prompts/:id` | 获取 / 更新 / 删除 |
 | GET | `/api/prompts/:id/versions` | 版本历史 |
 | POST | `/api/prompts/publish` | 发布(快照当前内容为版本) |
 | POST | `/api/prompts/rollback` | 回滚到指定版本 |
+| GET/PUT/DELETE | `/api/prompts/:id/rollout` | 灰度发布(AB)配置 |
 | GET | `/api/sdk/prompts/:key?env=` | SDK 运行时按 key 获取 Prompt |
+| POST | `/api/playground/run` | 渲染 Prompt 并调用模型提供方 |
+| GET | `/api/playground/providers` | 列出可用模型提供方 |
+| GET/POST/PUT/DELETE | `/api/agents` `/api/agents/:id` | Agent 增删改查 |
+| POST | `/api/agents/:id/run` | 运行 Agent |
+| GET/POST/PUT/DELETE | `/api/workflows` `/api/workflows/:id` | Workflow 增删改查 |
+| POST | `/api/workflows/:id/run` | 运行 Workflow,返回逐步轨迹 |
+| GET | `/api/audit` | 审计日志(变更记录) |
+| GET | `/api/runs` | 运行日志(模型调用记录) |
+| GET | `/api/runs/stats` | 运行指标聚合(次数 / Token / 延迟) |
 | GET | `/ws` | WebSocket 热更新事件流 |
 
 除 `/api/login`、`/ws`、`/health` 外,所有 `/api/*` 需要
-`Authorization: Bearer <token>`。
+`Authorization: Bearer <token>`。写操作需 `editor` 及以上角色,用户管理需
+`admin` 角色;`viewer` 仅可读与运行。
 
 ## SDK
 

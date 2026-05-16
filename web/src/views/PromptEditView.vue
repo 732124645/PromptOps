@@ -4,6 +4,7 @@ import { useRoute, useRouter } from 'vue-router'
 import {
   NButton,
   NInput,
+  NInputNumber,
   NSelect,
   NSpace,
   NCard,
@@ -13,15 +14,19 @@ import {
   NGridItem,
   NTag,
   NModal,
+  NSwitch,
   NTable,
   NEmpty,
   useMessage,
 } from 'naive-ui'
 import { api, type Prompt, type PromptVersion } from '../api/client'
+import { lineDiff, type DiffLine } from '../utils/diff'
+import { useWorkspaceStore } from '../stores/workspace'
 
 const route = useRoute()
 const router = useRouter()
 const message = useMessage()
+const workspace = useWorkspaceStore()
 
 const isNew = computed(() => !route.params.id)
 const id = ref<string>((route.params.id as string) || '')
@@ -47,6 +52,16 @@ const envOptions = [
 const versions = ref<PromptVersion[]>([])
 const showVersions = ref(false)
 
+const showDiff = ref(false)
+const diffVersion = ref('')
+const diffLines = ref<DiffLine[]>([])
+
+function openDiff(v: PromptVersion) {
+  diffVersion.value = v.version
+  diffLines.value = lineDiff(v.content, form.value.content || '')
+  showDiff.value = true
+}
+
 const contentPlaceholder = '你是一个 {{language}} 专家。\n请分析下面代码:\n{{code}}'
 
 // Detected {{variable}} placeholders in the prompt content.
@@ -61,13 +76,37 @@ function varLabel(name: string): string {
   return '{{' + name + '}}'
 }
 
+const rollout = ref({ enabled: false, variant_a: '', variant_b: '', weight_a: 50 })
+
 async function load() {
   if (isNew.value) return
   try {
     const { data } = await api.get(id.value)
     form.value = data.data
+    const r = await api.getRollout(id.value)
+    if (r.data.data) {
+      rollout.value = {
+        enabled: r.data.data.enabled,
+        variant_a: r.data.data.variant_a,
+        variant_b: r.data.data.variant_b,
+        weight_a: r.data.data.weight_a,
+      }
+    }
   } catch {
     message.error('加载失败')
+  }
+}
+
+async function saveRollout() {
+  if (isNew.value) {
+    message.warning('请先保存 Prompt')
+    return
+  }
+  try {
+    await api.setRollout(id.value, rollout.value)
+    message.success('灰度配置已保存')
+  } catch {
+    message.error('保存灰度配置失败')
   }
 }
 
@@ -79,7 +118,10 @@ async function save() {
   saving.value = true
   try {
     if (isNew.value) {
-      const { data } = await api.create(form.value)
+      const { data } = await api.create({
+        ...form.value,
+        workspace_id: workspace.currentId,
+      })
       id.value = data.data.id
       message.success('已创建')
       router.replace({ name: 'prompt-edit', params: { id: id.value } })
@@ -195,6 +237,39 @@ onMounted(load)
       </n-form>
     </n-card>
 
+    <n-card title="灰度发布 (AB)" :bordered="true" style="margin-top: 16px">
+      <p v-if="isNew" class="muted">请先保存 Prompt 再配置灰度发布。</p>
+      <template v-else>
+        <n-form>
+          <n-form-item label="启用灰度">
+            <n-switch v-model:value="rollout.enabled" />
+          </n-form-item>
+          <n-grid :cols="3" :x-gap="16">
+            <n-grid-item>
+              <n-form-item label="变体 A 版本">
+                <n-input v-model:value="rollout.variant_a" placeholder="例: v1" />
+              </n-form-item>
+            </n-grid-item>
+            <n-grid-item>
+              <n-form-item label="变体 B 版本">
+                <n-input v-model:value="rollout.variant_b" placeholder="例: v2" />
+              </n-form-item>
+            </n-grid-item>
+            <n-grid-item>
+              <n-form-item label="A 流量占比 (%)">
+                <n-input-number v-model:value="rollout.weight_a" :min="0" :max="100" />
+              </n-form-item>
+            </n-grid-item>
+          </n-grid>
+          <p class="muted">
+            启用后,SDK 按 key + 环境获取该 Prompt 时,会按占比返回变体 A / B
+            对应已发布版本的内容(变体版本需先在版本历史中发布)。
+          </p>
+          <n-button type="primary" @click="saveRollout">保存灰度配置</n-button>
+        </n-form>
+      </template>
+    </n-card>
+
     <n-modal
       v-model:show="showVersions"
       preset="card"
@@ -218,10 +293,29 @@ onMounted(load)
             <td>{{ v.env }}</td>
             <td>{{ new Date(v.created_at).toLocaleString() }}</td>
             <td class="preview">{{ v.content.slice(0, 60) }}{{ v.content.length > 60 ? '…' : '' }}</td>
-            <td><n-button size="tiny" @click="rollback(v)">回滚到此版本</n-button></td>
+            <td>
+              <n-space :size="4">
+                <n-button size="tiny" @click="openDiff(v)">对比当前</n-button>
+                <n-button size="tiny" type="primary" ghost @click="rollback(v)">回滚</n-button>
+              </n-space>
+            </td>
           </tr>
         </tbody>
       </n-table>
+    </n-modal>
+
+    <n-modal
+      v-model:show="showDiff"
+      preset="card"
+      :title="`Diff · ${diffVersion} → 当前`"
+      style="width: 760px"
+    >
+      <div class="diff-legend">
+        <span class="del">− 版本 {{ diffVersion }}</span>
+        <span class="add">+ 当前内容</span>
+      </div>
+      <n-empty v-if="!diffLines.length" description="无内容" />
+      <pre v-else class="diff"><span v-for="(line, i) in diffLines" :key="i" :class="['diff-line', line.type]">{{ line.type === 'add' ? '+ ' : line.type === 'del' ? '− ' : '  ' }}{{ line.text }}</span></pre>
     </n-modal>
   </div>
 </template>
@@ -251,5 +345,43 @@ onMounted(load)
   font-family: 'SF Mono', Menlo, Consolas, monospace;
   font-size: 12px;
   color: #aaa;
+}
+.diff-legend {
+  display: flex;
+  gap: 16px;
+  font-size: 12px;
+  margin-bottom: 8px;
+}
+.diff-legend .del {
+  color: #e88080;
+}
+.diff-legend .add {
+  color: #63e2b7;
+}
+.diff {
+  margin: 0;
+  max-height: 60vh;
+  overflow: auto;
+  border-radius: 6px;
+  background: rgba(255, 255, 255, 0.04);
+  font-family: 'SF Mono', Menlo, Consolas, monospace;
+  font-size: 12.5px;
+}
+.diff-line {
+  display: block;
+  padding: 0 10px;
+  white-space: pre-wrap;
+  word-break: break-word;
+}
+.diff-line.add {
+  background: rgba(99, 226, 183, 0.14);
+  color: #9ff0d3;
+}
+.diff-line.del {
+  background: rgba(232, 128, 128, 0.14);
+  color: #f0a8a8;
+}
+.diff-line.same {
+  color: #999;
 }
 </style>
