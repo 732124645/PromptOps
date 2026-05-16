@@ -1,54 +1,55 @@
-# API 参考
+# API Reference
 
-所有接口以 `/api` 为前缀。除 `/api/login`、`/ws`、`/health` 外,均需在请求头携带
-`Authorization: Bearer <token>`。
+All endpoints are prefixed with `/api`. Except for `/api/login`, `/ws` and
+`/health`, every request must carry an `Authorization: Bearer <token>` header.
 
-权限:写操作需 `editor` 及以上角色,用户管理需 `admin`;`viewer` 仅可读与运行。
+Permissions: write operations require the `editor` role or above; user
+management requires `admin`; `viewer` may only read and run.
 
-## 认证
+## Authentication
 
-| 方法 | 路径 | 说明 |
+| Method | Path | Description |
 |---|---|---|
-| POST | `/api/login` | 登录(用户名 / 密码,或静态 Token) |
-| POST | `/api/logout` | 注销当前会话 |
-| GET | `/api/me` | 当前用户与角色 |
+| POST | `/api/login` | Log in (username/password, or static token) |
+| POST | `/api/logout` | Revoke the current session |
+| GET | `/api/me` | Current user and role |
 
 ## Prompt
 
-| 方法 | 路径 | 说明 |
+| Method | Path | Description |
 |---|---|---|
-| GET | `/api/prompts` | 列表 / 搜索(`q`、`env`、`category`、`tag`、`workspace`) |
-| POST | `/api/prompts` | 创建 |
-| GET / PUT / DELETE | `/api/prompts/:id` | 获取 / 更新 / 删除 |
-| GET | `/api/prompts/:id/versions` | 版本历史 |
-| POST | `/api/prompts/publish` | 发布(快照当前内容为版本) |
-| POST | `/api/prompts/rollback` | 回滚到指定版本 |
-| GET / PUT / DELETE | `/api/prompts/:id/rollout` | 灰度发布(AB)配置 |
-| GET | `/api/sdk/prompts/:key?env=` | SDK 运行时按 key 获取 Prompt |
+| GET | `/api/prompts` | List / search (`q`, `env`, `category`, `tag`, `workspace`) |
+| POST | `/api/prompts` | Create |
+| GET / PUT / DELETE | `/api/prompts/:id` | Get / update / delete |
+| GET | `/api/prompts/:id/versions` | Version history |
+| POST | `/api/prompts/publish` | Publish (snapshot current content as a version) |
+| POST | `/api/prompts/rollback` | Roll back to a version |
+| GET / PUT / DELETE | `/api/prompts/:id/rollout` | Gray-release (A/B) config |
+| GET | `/api/sdk/prompts/:key?env=` | SDK runtime fetch by key |
 
 ## Playground / Agent / Workflow
 
-| 方法 | 路径 | 说明 |
+| Method | Path | Description |
 |---|---|---|
-| POST | `/api/playground/run` | 渲染 Prompt 并调用模型提供方 |
-| GET | `/api/playground/providers` | 列出可用模型提供方 |
-| GET / POST / PUT / DELETE | `/api/agents` `/api/agents/:id` | Agent 增删改查 |
-| POST | `/api/agents/:id/run` | 运行 Agent |
-| GET / POST / PUT / DELETE | `/api/workflows` `/api/workflows/:id` | Workflow 增删改查 |
-| POST | `/api/workflows/:id/run` | 运行 Workflow,返回逐步轨迹 |
+| POST | `/api/playground/run` | Render a prompt and call a model provider |
+| GET | `/api/playground/providers` | List available model providers |
+| GET / POST / PUT / DELETE | `/api/agents` `/api/agents/:id` | Agent CRUD |
+| POST | `/api/agents/:id/run` | Run an agent |
+| GET / POST / PUT / DELETE | `/api/workflows` `/api/workflows/:id` | Workflow CRUD |
+| POST | `/api/workflows/:id/run` | Run a workflow, returning a per-step trace |
 
-## 治理与观测
+## Governance & Observability
 
-| 方法 | 路径 | 说明 |
+| Method | Path | Description |
 |---|---|---|
-| GET | `/api/audit` | 审计日志 |
-| GET | `/api/runs` | 运行日志 |
-| GET | `/api/runs/stats` | 运行指标聚合 |
-| GET / POST / PUT / DELETE | `/api/users` `/api/users/:id` | 用户管理(仅 admin) |
-| GET / POST / DELETE | `/api/workspaces` `/api/workspaces/:id` | 团队工作区 |
+| GET | `/api/audit` | Audit log |
+| GET | `/api/runs` | Run log |
+| GET | `/api/runs/stats` | Aggregated run metrics |
+| GET / POST / PUT / DELETE | `/api/users` `/api/users/:id` | User management (admin only) |
+| GET / POST / DELETE | `/api/workspaces` `/api/workspaces/:id` | Team workspaces |
 
-## 实时
+## Realtime
 
-| 方法 | 路径 | 说明 |
+| Method | Path | Description |
 |---|---|---|
-| GET | `/ws` | WebSocket 热更新事件流 |
+| GET | `/ws` | WebSocket hot-reload event stream |
