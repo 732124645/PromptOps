@@ -131,6 +131,9 @@ client.watch()
 
 ## Documentation
 
+在线文档站(VitePress,由 GitHub Pages 托管):<https://732124645.github.io/PromptOps/>
+—— 站点源码位于 `website/`,经 `.github/workflows/docs.yml` 自动构建发布。
+
 完整的项目设计文档见 [docs/PromptOps.md](docs/PromptOps.md),涵盖项目定位、
 核心概念、MVP 范围、技术架构、数据库与 API 设计、SDK、热更新方案、部署以及
 路线图规划。
