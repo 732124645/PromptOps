@@ -235,8 +235,10 @@ export const api = {
   runWorkflow: (id: string, payload: { variables: Record<string, string>; api_key?: string }) =>
     http.post<WorkflowRunResult>(`/workflows/${id}/run`, payload),
 
-  listAudit: () => http.get<{ data: AuditEntry[] }>('/audit'),
-  listRuns: () => http.get<{ data: RunEntry[] }>('/runs'),
+  listAudit: (params?: { limit?: number; offset?: number }) =>
+    http.get<{ data: AuditEntry[]; total: number }>('/audit', { params }),
+  listRuns: (params?: { limit?: number; offset?: number }) =>
+    http.get<{ data: RunEntry[]; total: number }>('/runs', { params }),
   runStats: () => http.get<RunStats>('/runs/stats'),
   listClients: () => http.get<{ data: ClientEntry[] }>('/clients'),
 }

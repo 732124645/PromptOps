@@ -100,9 +100,10 @@ docker compose up --build   # builds frontend + backend, open http://localhost:8
 | GET | `/api/clients` | Live hot-reload connections (SDKs & browser) |
 | GET | `/ws` | WebSocket hot-reload event stream |
 
-All `/api/*` routes except `/api/login`, `/ws` and `/health` require
-`Authorization: Bearer <token>`. Write operations require the `editor` role or
-above, user management requires `admin`; `viewer` can only read and run.
+All `/api/*` routes except `/api/login` and `/health` require
+`Authorization: Bearer <token>`; the `/ws` WebSocket authenticates via a
+`?token=` query parameter. Write operations require the `editor` role or above,
+user management requires `admin`; `viewer` can only read and run.
 
 ## SDK
 

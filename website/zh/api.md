@@ -1,7 +1,8 @@
 # API 参考
 
-所有接口以 `/api` 为前缀。除 `/api/login`、`/ws`、`/health` 外,均需在请求头携带
-`Authorization: Bearer <token>`。
+所有接口以 `/api` 为前缀。除 `/api/login`、`/health` 外,均需在请求头携带
+`Authorization: Bearer <token>`。`/ws` WebSocket 也需要 token —— 由于浏览器无法
+在 WebSocket 连接上设置请求头,token 以握手时的 `?token=` 查询参数传入。
 
 权限:写操作需 `editor` 及以上角色,用户管理需 `admin`;`viewer` 仅可读与运行。
 
@@ -41,8 +42,8 @@
 
 | 方法 | 路径 | 说明 |
 |---|---|---|
-| GET | `/api/audit` | 审计日志 |
-| GET | `/api/runs` | 运行日志 |
+| GET | `/api/audit` | 审计日志(分页:`?limit=` `?offset=`) |
+| GET | `/api/runs` | 运行日志(分页:`?limit=` `?offset=`) |
 | GET | `/api/runs/stats` | 运行指标聚合 |
 | GET | `/api/clients` | 在线热更新连接(SDK 与浏览器) |
 | GET / POST / PUT / DELETE | `/api/users` `/api/users/:id` | 用户管理(仅 admin) |
@@ -52,4 +53,4 @@
 
 | 方法 | 路径 | 说明 |
 |---|---|---|
-| GET | `/ws` | WebSocket 热更新事件流 |
+| GET | `/ws` | WebSocket 热更新事件流(通过 `?token=` 鉴权) |

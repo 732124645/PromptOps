@@ -99,9 +99,9 @@ docker compose up --build   # 构建前端 + 后端,访问 http://localhost:8080
 | GET | `/api/clients` | 在线热更新连接(SDK 与浏览器) |
 | GET | `/ws` | WebSocket 热更新事件流 |
 
-除 `/api/login`、`/ws`、`/health` 外,所有 `/api/*` 需要
-`Authorization: Bearer <token>`。写操作需 `editor` 及以上角色,用户管理需
-`admin` 角色;`viewer` 仅可读与运行。
+除 `/api/login`、`/health` 外,所有 `/api/*` 需要
+`Authorization: Bearer <token>`;`/ws` 通过 `?token=` 查询参数鉴权。写操作需
+`editor` 及以上角色,用户管理需 `admin` 角色;`viewer` 仅可读与运行。
 
 ## SDK
 

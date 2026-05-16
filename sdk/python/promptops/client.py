@@ -85,8 +85,9 @@ class PromptOpsClient:
             return
         self._sock = sock
         key = base64.b64encode(os.urandom(16)).decode("ascii")
-        # Identify this connection to the server's client registry.
-        query = "client=python-sdk&namespace=" + quote(self.namespace, safe="")
+        # Authenticate and identify this connection to the server.
+        query = "token=" + quote(self.token, safe="")
+        query += "&client=python-sdk&namespace=" + quote(self.namespace, safe="")
         if self.app_name:
             query += "&app=" + quote(self.app_name, safe="")
         handshake = (

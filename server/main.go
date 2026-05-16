@@ -14,6 +14,11 @@ func main() {
 	dbPath := getenv("PROMPTOPS_DB", "data/promptops.db")
 	addr := getenv("PROMPTOPS_ADDR", ":8080")
 
+	if os.Getenv("PROMPTOPS_TOKEN") == "" {
+		log.Println("WARNING: PROMPTOPS_TOKEN is not set — using the default dev token; " +
+			"set it before any real deployment")
+	}
+
 	database, err := db.Open(dbPath)
 	if err != nil {
 		log.Fatalf("open db: %v", err)
@@ -34,7 +39,7 @@ func main() {
 	r.Use(handlers.CORS())
 
 	r.POST("/api/login", h.Login)
-	r.GET("/ws", hub.ServeWS)
+	r.GET("/ws", h.AuthenticateWS(), hub.ServeWS)
 	r.GET("/health", func(c *gin.Context) { c.JSON(200, gin.H{"ok": true}) })
 
 	// Read and run routes — any authenticated user (viewer and above).

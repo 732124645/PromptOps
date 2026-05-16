@@ -1,6 +1,7 @@
 package ws
 
 import (
+	"log"
 	"net/http"
 	"sort"
 	"sync"
@@ -54,6 +55,7 @@ func (h *Hub) Broadcast(msg []byte) {
 	select {
 	case h.broadcast <- msg:
 	default:
+		log.Println("ws: broadcast queue full, dropping a hot-reload event")
 	}
 }
 

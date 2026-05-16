@@ -2,6 +2,7 @@ package handlers
 
 import (
 	"net/http"
+	"strconv"
 	"time"
 	"unicode/utf8"
 
@@ -9,6 +10,22 @@ import (
 	"github.com/gin-gonic/gin"
 	"github.com/google/uuid"
 )
+
+// parsePaging reads `limit` and `offset` query params with sane defaults and a
+// hard cap, so a single request can never pull the whole table.
+func parsePaging(c *gin.Context) (limit, offset int) {
+	limit, offset = 50, 0
+	if v, err := strconv.Atoi(c.Query("limit")); err == nil && v > 0 {
+		limit = v
+	}
+	if limit > 200 {
+		limit = 200
+	}
+	if v, err := strconv.Atoi(c.Query("offset")); err == nil && v > 0 {
+		offset = v
+	}
+	return limit, offset
+}
 
 // estimateTokens approximates a token count (~4 characters per token).
 func estimateTokens(s string) int {
@@ -53,24 +70,30 @@ func (h *Handler) recordRun(source, refKey, provider, model, promptText, outputT
 	h.db.Create(&entry)
 }
 
-// ListAudit returns the most recent audit-log entries.
+// ListAudit returns audit-log entries, newest first, with limit/offset paging.
 func (h *Handler) ListAudit(c *gin.Context) {
+	limit, offset := parsePaging(c)
+	var total int64
+	h.db.Model(&models.AuditLog{}).Count(&total)
 	var logs []models.AuditLog
-	if err := h.db.Order("created_at desc").Limit(200).Find(&logs).Error; err != nil {
+	if err := h.db.Order("created_at desc").Limit(limit).Offset(offset).Find(&logs).Error; err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
 		return
 	}
-	c.JSON(http.StatusOK, gin.H{"data": logs})
+	c.JSON(http.StatusOK, gin.H{"data": logs, "total": total})
 }
 
-// ListRuns returns the most recent run-log entries.
+// ListRuns returns run-log entries, newest first, with limit/offset paging.
 func (h *Handler) ListRuns(c *gin.Context) {
+	limit, offset := parsePaging(c)
+	var total int64
+	h.db.Model(&models.RunLog{}).Count(&total)
 	var runs []models.RunLog
-	if err := h.db.Order("created_at desc").Limit(200).Find(&runs).Error; err != nil {
+	if err := h.db.Order("created_at desc").Limit(limit).Offset(offset).Find(&runs).Error; err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
 		return
 	}
-	c.JSON(http.StatusOK, gin.H{"data": runs})
+	c.JSON(http.StatusOK, gin.H{"data": runs, "total": total})
 }
 
 // ListClients returns the live hot-reload connections (SDK instances and
@@ -79,45 +102,53 @@ func (h *Handler) ListClients(c *gin.Context) {
 	c.JSON(http.StatusOK, gin.H{"data": h.hub.Clients()})
 }
 
-// RunStats aggregates run logs into summary metrics.
+// RunStats aggregates run logs into summary metrics. The aggregation runs in
+// SQL, so the whole run-log table never has to be loaded into memory.
 func (h *Handler) RunStats(c *gin.Context) {
-	var runs []models.RunLog
-	if err := h.db.Find(&runs).Error; err != nil {
+	runs := h.db.Model(&models.RunLog{})
+
+	var agg struct {
+		Total        int64
+		OK           int64
+		PromptTokens int64
+		OutputTokens int64
+		AvgLatency   float64
+	}
+	if err := runs.Select(
+		"COUNT(*) AS total, " +
+			"COALESCE(SUM(CASE WHEN status = 'ok' THEN 1 ELSE 0 END), 0) AS ok, " +
+			"COALESCE(SUM(prompt_tokens), 0) AS prompt_tokens, " +
+			"COALESCE(SUM(output_tokens), 0) AS output_tokens, " +
+			"COALESCE(AVG(latency_ms), 0) AS avg_latency",
+	).Scan(&agg).Error; err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
 		return
 	}
 
-	var ok, fail, promptTokens, outputTokens int
-	var totalLatency int64
-	byProvider := map[string]int{}
-	for _, r := range runs {
-		if r.Status == "ok" {
-			ok++
-		} else {
-			fail++
-		}
-		promptTokens += r.PromptTokens
-		outputTokens += r.OutputTokens
-		totalLatency += r.LatencyMs
-		byProvider[r.Provider]++
+	type providerRow struct {
+		Provider string
+		Count    int
 	}
-
-	avgLatency := 0
-	if len(runs) > 0 {
-		avgLatency = int(totalLatency / int64(len(runs)))
+	var providerRows []providerRow
+	if err := h.db.Model(&models.RunLog{}).
+		Select("provider, COUNT(*) AS count").
+		Group("provider").
+		Scan(&providerRows).Error; err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+		return
 	}
-	providers := make([]gin.H, 0, len(byProvider))
-	for name, count := range byProvider {
-		providers = append(providers, gin.H{"provider": name, "count": count})
+	providers := make([]gin.H, 0, len(providerRows))
+	for _, p := range providerRows {
+		providers = append(providers, gin.H{"provider": p.Provider, "count": p.Count})
 	}
 
 	c.JSON(http.StatusOK, gin.H{
-		"total":          len(runs),
-		"ok":             ok,
-		"error":          fail,
-		"prompt_tokens":  promptTokens,
-		"output_tokens":  outputTokens,
-		"avg_latency_ms": avgLatency,
+		"total":          agg.Total,
+		"ok":             agg.OK,
+		"error":          agg.Total - agg.OK,
+		"prompt_tokens":  agg.PromptTokens,
+		"output_tokens":  agg.OutputTokens,
+		"avg_latency_ms": int(agg.AvgLatency),
 		"by_provider":    providers,
 	})
 }

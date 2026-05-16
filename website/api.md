@@ -1,7 +1,9 @@
 # API Reference
 
-All endpoints are prefixed with `/api`. Except for `/api/login`, `/ws` and
-`/health`, every request must carry an `Authorization: Bearer <token>` header.
+All endpoints are prefixed with `/api`. Except for `/api/login` and `/health`,
+every request must carry an `Authorization: Bearer <token>` header. The `/ws`
+WebSocket also requires a token — passed as a `?token=` query parameter on the
+handshake, since browsers cannot set headers on a WebSocket connection.
 
 Permissions: write operations require the `editor` role or above; user
 management requires `admin`; `viewer` may only read and run.
@@ -42,8 +44,8 @@ management requires `admin`; `viewer` may only read and run.
 
 | Method | Path | Description |
 |---|---|---|
-| GET | `/api/audit` | Audit log |
-| GET | `/api/runs` | Run log |
+| GET | `/api/audit` | Audit log (paged: `?limit=` `?offset=`) |
+| GET | `/api/runs` | Run log (paged: `?limit=` `?offset=`) |
 | GET | `/api/runs/stats` | Aggregated run metrics |
 | GET | `/api/clients` | Live hot-reload connections (SDKs & browser) |
 | GET / POST / PUT / DELETE | `/api/users` `/api/users/:id` | User management (admin only) |
@@ -53,4 +55,4 @@ management requires `admin`; `viewer` may only read and run.
 
 | Method | Path | Description |
 |---|---|---|
-| GET | `/ws` | WebSocket hot-reload event stream |
+| GET | `/ws` | WebSocket hot-reload event stream (auth via `?token=`) |

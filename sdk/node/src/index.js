@@ -69,8 +69,12 @@ export class PromptOpsClient {
    */
   watch() {
     if (this._ws) return this._ws
-    // Identify this connection to the server's client registry.
-    const params = new URLSearchParams({ client: 'node-sdk', namespace: this.namespace })
+    // Authenticate and identify this connection to the server.
+    const params = new URLSearchParams({
+      token: this.token,
+      client: 'node-sdk',
+      namespace: this.namespace,
+    })
     if (this.appName) params.set('app', this.appName)
     const wsUrl = `${this.server.replace(/^http/, 'ws')}/ws?${params}`
     const ws = new WebSocket(wsUrl)

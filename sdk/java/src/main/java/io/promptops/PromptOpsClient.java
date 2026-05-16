@@ -116,8 +116,9 @@ public final class PromptOpsClient {
      * appears in a hot-reload event. {@code onUpdate} receives the prompt key.
      */
     public void watch(Consumer<String> onUpdate) {
-        // Identify this connection to the server's client registry.
-        String query = "client=java-sdk&namespace="
+        // Authenticate and identify this connection to the server.
+        String query = "token=" + URLEncoder.encode(token, StandardCharsets.UTF_8)
+                + "&client=java-sdk&namespace="
                 + URLEncoder.encode(namespace, StandardCharsets.UTF_8);
         if (!appName.isEmpty()) {
             query += "&app=" + URLEncoder.encode(appName, StandardCharsets.UTF_8);

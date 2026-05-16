@@ -70,6 +70,32 @@ func (h *Handler) Authenticate() gin.HandlerFunc {
 	}
 }
 
+// AuthenticateWS validates the token on a WebSocket handshake. Browsers cannot
+// set headers on a WebSocket connection, so the token is read from the `token`
+// query parameter, falling back to the Authorization header for other clients.
+func (h *Handler) AuthenticateWS() gin.HandlerFunc {
+	return func(c *gin.Context) {
+		tok := c.Query("token")
+		if tok == "" {
+			tok = strings.TrimPrefix(c.GetHeader("Authorization"), "Bearer ")
+		}
+		if tok == "" {
+			c.AbortWithStatus(http.StatusUnauthorized)
+			return
+		}
+		if tok == authToken() {
+			c.Next()
+			return
+		}
+		var s models.Session
+		if err := h.db.First(&s, "token = ?", tok).Error; err != nil {
+			c.AbortWithStatus(http.StatusUnauthorized)
+			return
+		}
+		c.Next()
+	}
+}
+
 // RequireRole aborts the request unless the authenticated role is at least min.
 func (h *Handler) RequireRole(min string) gin.HandlerFunc {
 	return func(c *gin.Context) {

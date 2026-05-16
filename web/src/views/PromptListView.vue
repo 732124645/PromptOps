@@ -3,6 +3,7 @@ import { ref, computed, watch, onMounted, onBeforeUnmount } from 'vue'
 import { useRouter } from 'vue-router'
 import { useI18n } from 'vue-i18n'
 import { useWorkspaceStore } from '../stores/workspace'
+import { useAuthStore } from '../stores/auth'
 import {
   NButton,
   NInput,
@@ -21,6 +22,7 @@ const router = useRouter()
 const message = useMessage()
 const dialog = useDialog()
 const workspace = useWorkspaceStore()
+const auth = useAuthStore()
 const { t } = useI18n()
 
 const prompts = ref<Prompt[]>([])
@@ -81,7 +83,12 @@ function remove(p: Prompt) {
 function connectWS() {
   try {
     const proto = location.protocol === 'https:' ? 'wss' : 'ws'
-    socket = new WebSocket(`${proto}://${location.host}/ws?client=browser&app=promptops-ui`)
+    const params = new URLSearchParams({
+      token: auth.token || '',
+      client: 'browser',
+      app: 'promptops-ui',
+    })
+    socket = new WebSocket(`${proto}://${location.host}/ws?${params}`)
     socket.onopen = () => (live.value = true)
     socket.onclose = () => (live.value = false)
     socket.onmessage = () => {
