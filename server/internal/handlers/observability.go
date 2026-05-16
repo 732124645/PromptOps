@@ -73,6 +73,12 @@ func (h *Handler) ListRuns(c *gin.Context) {
 	c.JSON(http.StatusOK, gin.H{"data": runs})
 }
 
+// ListClients returns the live hot-reload connections (SDK instances and
+// browser sessions) currently held open by the WebSocket hub.
+func (h *Handler) ListClients(c *gin.Context) {
+	c.JSON(http.StatusOK, gin.H{"data": h.hub.Clients()})
+}
+
 // RunStats aggregates run logs into summary metrics.
 func (h *Handler) RunStats(c *gin.Context) {
 	var runs []models.RunLog

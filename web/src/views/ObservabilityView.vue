@@ -15,7 +15,13 @@ import {
   NSpace,
   useMessage,
 } from 'naive-ui'
-import { api, type AuditEntry, type RunEntry, type RunStats } from '../api/client'
+import {
+  api,
+  type AuditEntry,
+  type RunEntry,
+  type RunStats,
+  type ClientEntry,
+} from '../api/client'
 
 const message = useMessage()
 const { t } = useI18n()
@@ -23,14 +29,21 @@ const loading = ref(false)
 const stats = ref<RunStats | null>(null)
 const runs = ref<RunEntry[]>([])
 const audit = ref<AuditEntry[]>([])
+const clients = ref<ClientEntry[]>([])
 
 async function load() {
   loading.value = true
   try {
-    const [s, r, a] = await Promise.all([api.runStats(), api.listRuns(), api.listAudit()])
+    const [s, r, a, cl] = await Promise.all([
+      api.runStats(),
+      api.listRuns(),
+      api.listAudit(),
+      api.listClients(),
+    ])
     stats.value = s.data
     runs.value = r.data.data
     audit.value = a.data.data
+    clients.value = cl.data.data
   } catch {
     message.error(t('common.loadFailed'))
   } finally {
@@ -153,6 +166,40 @@ onMounted(load)
             </tbody>
           </n-table>
         </n-tab-pane>
+
+        <n-tab-pane name="clients" :tab="`${t('observability.tabClients')} (${clients.length})`">
+          <n-empty
+            v-if="!clients.length"
+            :description="t('observability.noClients')"
+            style="margin: 32px 0"
+          />
+          <n-table v-else :bordered="false" :single-line="false">
+            <thead>
+              <tr>
+                <th>{{ t('observability.colClientType') }}</th>
+                <th>{{ t('observability.colApp') }}</th>
+                <th>{{ t('observability.colNamespace') }}</th>
+                <th>{{ t('observability.colRemoteAddr') }}</th>
+                <th>{{ t('observability.colUserAgent') }}</th>
+                <th>{{ t('observability.colConnectedAt') }}</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr v-for="cl in clients" :key="cl.id">
+                <td>
+                  <n-tag size="small" :type="cl.client_type === 'browser' ? 'default' : 'info'">
+                    {{ cl.client_type }}
+                  </n-tag>
+                </td>
+                <td>{{ cl.app || '-' }}</td>
+                <td>{{ cl.namespace || '-' }}</td>
+                <td><code>{{ cl.remote_addr }}</code></td>
+                <td class="ua">{{ cl.user_agent || '-' }}</td>
+                <td>{{ fmtTime(cl.connected_at) }}</td>
+              </tr>
+            </tbody>
+          </n-table>
+        </n-tab-pane>
       </n-tabs>
     </n-spin>
   </div>
@@ -186,5 +233,13 @@ onMounted(load)
 }
 code {
   font-family: 'SF Mono', Menlo, Consolas, monospace;
+}
+.ua {
+  max-width: 320px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  font-size: 12px;
+  color: #aaa;
 }
 </style>

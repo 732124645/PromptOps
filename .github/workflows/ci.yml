@@ -60,7 +60,10 @@ jobs:
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v4
         with:
-          node-version: '22'
+          node-version: '18'
+      - name: Install dependencies
+        working-directory: sdk/node
+        run: npm install
       - name: Test
         working-directory: sdk/node
         run: node --test
@@ -104,7 +107,7 @@ jobs:
 
       - uses: actions/setup-node@v4
         with:
-          node-version: '22'
+          node-version: '18'
 
       - uses: actions/setup-python@v5
         with:
@@ -113,6 +116,10 @@ jobs:
       - name: Build server
         working-directory: server
         run: go mod tidy && go build -o promptops .
+
+      - name: Install Node SDK dependencies
+        working-directory: sdk/node
+        run: npm install
 
       - name: Run SDK integration tests
         run: bash scripts/sdk-integration.sh

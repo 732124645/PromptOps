@@ -3,7 +3,7 @@
 ## Requirements
 
 - Go 1.24+
-- Node.js 22+
+- Node.js 18+
 
 ## Start the backend
 

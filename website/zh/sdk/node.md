@@ -1,6 +1,7 @@
 # Node SDK
 
-零依赖,使用 Node 22+ 内置的 `fetch` 与 `WebSocket`。源码位于 `sdk/node`。
+Node 18+。使用内置 `fetch`;WebSocket 热更新由
+[`ws`](https://www.npmjs.com/package/ws) 提供(唯一依赖)。源码位于 `sdk/node`。
 
 ## 用法
 
@@ -28,7 +29,7 @@ client.watch()
 
 | 方法 | 说明 |
 |---|---|
-| `new PromptOpsClient({ server, namespace?, token? })` | 创建客户端 |
+| `new PromptOpsClient({ server, namespace?, token?, appName? })` | 创建客户端(`appName` 会显示在服务端的在线客户端面板) |
 | `getPrompt(key, { refresh? })` | 获取 Prompt,默认走缓存 |
 | `render(key, vars)` | 获取并渲染 `{{变量}}` |
 | `on(event, cb)` | 监听 `update` / `connect` / `disconnect` / `error` |

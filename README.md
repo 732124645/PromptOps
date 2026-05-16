@@ -17,7 +17,7 @@ MVP、SDK / 热更新、Playground、Agent / Workflow 运行时、可观测性�
 | 后端 | Go + Gin + GORM + SQLite | Prompt CRUD / 搜索 / 版本管理 / 多环境 / SDK 接口 |
 | 热更新 | WebSocket (`/ws`) | Prompt 变更实时推送给已连接客户端 |
 | 前端 | Vue3 + Vite + Naive UI + Pinia | Prompt / Agent / Workflow / Playground / 观测 页面 |
-| SDK | Node / Python / Java(均零依赖) | 按 key 获取 Prompt、模板渲染、WebSocket 热更新 |
+| SDK | Node(仅依赖 `ws`)/ Python / Java(零依赖) | 按 key 获取 Prompt、模板渲染、WebSocket 热更新 |
 | Playground | 模型网关(mock / OpenAI / Claude / Ollama / Gemini) | 填变量、调用模型、查看结果;版本 Diff 对比 |
 | Agent | 配置化 Agent(Prompt + 提供方 + 模型) | 保存可复用配置并一键运行 |
 | Workflow | 步骤引擎(render → model → transform) | 编排多步流程,串联输出,查看逐步轨迹 |
@@ -102,13 +102,13 @@ docker compose up --build   # 构建前端 + 后端,访问 http://localhost:8080
 
 ## SDK
 
-PromptOps 提供**零依赖**的运行时 SDK,支持按 key 获取 Prompt、`{{变量}}` 模板
+PromptOps 提供轻量的运行时 SDK,支持按 key 获取 Prompt、`{{变量}}` 模板
 渲染,以及通过 WebSocket 的热更新(`watch()` —— Prompt 在后端变更后自动刷新
 本地缓存)。
 
-- `sdk/node` —— Node.js(Node 22+,使用内置 `fetch` / `WebSocket`)
-- `sdk/python` —— Python(纯标准库,含最小 WebSocket 客户端)
-- `sdk/java` —— Java(纯 JDK,使用 `java.net.http`)
+- `sdk/node` —— Node.js(Node 18+,仅依赖 `ws`;使用内置 `fetch`)
+- `sdk/python` —— Python(零依赖,纯标准库,含最小 WebSocket 客户端)
+- `sdk/java` —— Java(零依赖,纯 JDK,使用 `java.net.http`)
 
 Node 示例:
 

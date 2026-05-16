@@ -59,6 +59,7 @@ func main() {
 		api.GET("/audit", h.ListAudit)
 		api.GET("/runs", h.ListRuns)
 		api.GET("/runs/stats", h.RunStats)
+		api.GET("/clients", h.ListClients)
 		api.GET("/workspaces", h.ListWorkspaces)
 	}
 

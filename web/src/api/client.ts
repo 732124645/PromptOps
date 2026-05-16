@@ -127,6 +127,16 @@ export interface User {
   created_at: string
 }
 
+export interface ClientEntry {
+  id: string
+  client_type: string
+  app: string
+  namespace: string
+  remote_addr: string
+  user_agent: string
+  connected_at: string
+}
+
 export interface Rollout {
   id: string
   key: string
@@ -228,6 +238,7 @@ export const api = {
   listAudit: () => http.get<{ data: AuditEntry[] }>('/audit'),
   listRuns: () => http.get<{ data: RunEntry[] }>('/runs'),
   runStats: () => http.get<RunStats>('/runs/stats'),
+  listClients: () => http.get<{ data: ClientEntry[] }>('/clients'),
 }
 
 export default http

@@ -28,12 +28,13 @@ def render_template(content, variables=None):
 class PromptOpsClient:
     """Fetches prompts by key, caches them, and (via watch) keeps them fresh."""
 
-    def __init__(self, server, namespace="prod", token=DEFAULT_TOKEN):
+    def __init__(self, server, namespace="prod", token=DEFAULT_TOKEN, app_name=""):
         if not server:
             raise ValueError('PromptOps: "server" is required')
         self.server = server.rstrip("/")
         self.namespace = namespace
         self.token = token
+        self.app_name = app_name
         self._cache = {}
         self._on_update = None
         self._stop = threading.Event()
@@ -84,14 +85,18 @@ class PromptOpsClient:
             return
         self._sock = sock
         key = base64.b64encode(os.urandom(16)).decode("ascii")
+        # Identify this connection to the server's client registry.
+        query = "client=python-sdk&namespace=" + quote(self.namespace, safe="")
+        if self.app_name:
+            query += "&app=" + quote(self.app_name, safe="")
         handshake = (
-            "GET /ws HTTP/1.1\r\n"
+            "GET /ws?{} HTTP/1.1\r\n"
             "Host: {}:{}\r\n"
             "Upgrade: websocket\r\n"
             "Connection: Upgrade\r\n"
             "Sec-WebSocket-Key: {}\r\n"
             "Sec-WebSocket-Version: 13\r\n\r\n"
-        ).format(host, port, key)
+        ).format(query, host, port, key)
         try:
             sock.sendall(handshake.encode("ascii"))
             response = self._read_until(sock, b"\r\n\r\n")

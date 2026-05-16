@@ -22,7 +22,7 @@ features:
   - title: Hot Reload
     details: Over WebSocket, prompt changes are pushed to connected SDKs in real time — no AI-service restart required.
   - title: Three SDKs
-    details: Zero-dependency Node, Python and Java SDKs — fetch prompts by key, render template variables, subscribe to hot-reload.
+    details: Node, Python and Java SDKs (Python & Java zero-dependency) — fetch prompts by key, render template variables, subscribe to hot-reload.
   - title: Playground
     details: Fill in variables, call a model (OpenAI / Claude / Ollama / Gemini / mock) and instantly see the rendered prompt and output.
   - title: Agents & Workflows

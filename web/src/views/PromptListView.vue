@@ -81,7 +81,7 @@ function remove(p: Prompt) {
 function connectWS() {
   try {
     const proto = location.protocol === 'https:' ? 'wss' : 'ws'
-    socket = new WebSocket(`${proto}://${location.host}/ws`)
+    socket = new WebSocket(`${proto}://${location.host}/ws?client=browser&app=promptops-ui`)
     socket.onopen = () => (live.value = true)
     socket.onclose = () => (live.value = false)
     socket.onmessage = () => {

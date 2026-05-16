@@ -44,6 +44,7 @@
 | GET | `/api/audit` | 审计日志 |
 | GET | `/api/runs` | 运行日志 |
 | GET | `/api/runs/stats` | 运行指标聚合 |
+| GET | `/api/clients` | 在线热更新连接(SDK 与浏览器) |
 | GET / POST / PUT / DELETE | `/api/users` `/api/users/:id` | 用户管理(仅 admin) |
 | GET / POST / DELETE | `/api/workspaces` `/api/workspaces/:id` | 团队工作区 |
 

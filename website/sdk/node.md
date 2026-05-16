@@ -1,7 +1,8 @@
 # Node SDK
 
-Zero dependencies — uses the `fetch` and `WebSocket` globals built into
-Node 22+. Source lives in `sdk/node`.
+Node 18+. Uses the built-in `fetch`; WebSocket hot-reload is powered by
+[`ws`](https://www.npmjs.com/package/ws), its only dependency. Source lives
+in `sdk/node`.
 
 ## Usage
 
@@ -29,7 +30,7 @@ client.watch()
 
 | Method | Description |
 |---|---|
-| `new PromptOpsClient({ server, namespace?, token? })` | Create a client |
+| `new PromptOpsClient({ server, namespace?, token?, appName? })` | Create a client (`appName` shows in the server's connected-clients panel) |
 | `getPrompt(key, { refresh? })` | Fetch a prompt; cached by default |
 | `render(key, vars)` | Fetch and render `{{variables}}` |
 | `on(event, cb)` | Listen for `update` / `connect` / `disconnect` / `error` |

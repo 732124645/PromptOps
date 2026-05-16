@@ -22,7 +22,7 @@ features:
   - title: 热更新
     details: 基于 WebSocket,Prompt 变更实时推送到已连接的 SDK,AI 服务无需重启即可生效。
   - title: 三语言 SDK
-    details: Node、Python、Java 三个零依赖 SDK,按 key 获取 Prompt、渲染模板变量、订阅热更新。
+    details: Node、Python、Java 三个 SDK(Python、Java 零依赖),按 key 获取 Prompt、渲染模板变量、订阅热更新。
   - title: Playground
     details: 填入变量、调用模型(OpenAI / Claude / Ollama / Gemini / mock)、即时查看渲染结果与输出。
   - title: Agent 与 Workflow

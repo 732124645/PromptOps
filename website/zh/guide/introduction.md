@@ -25,11 +25,11 @@ Workflow 从代码中解耦出来,让 AI 应用支持 Prompt 的热更新、版�
 |---|---|
 | Prompt Runtime | CRUD、搜索、分类、多环境、版本发布与回滚 |
 | 热更新 | WebSocket 实时推送 Prompt 变更 |
-| SDK | Node / Python / Java,零第三方依赖 |
+| SDK | Node / Python / Java —— Python、Java 零依赖,Node 仅依赖 `ws` |
 | Playground | 填变量、调模型、看结果;版本 Diff 对比 |
 | Agent | 配置化的 Prompt + 提供方 + 模型 |
 | Workflow | render → model → transform 步骤编排引擎 |
-| 可观测性 | 审计日志、运行日志、Token 与延迟统计 |
+| 可观测性 | 审计日志、运行日志、Token 与延迟统计、在线客户端 |
 | RBAC | admin / editor / viewer 三级角色 |
 | 灰度发布 | 按权重的 AB 版本流量切分 |
 | 团队空间 | 资源按 Workspace 归组 |
@@ -38,7 +38,7 @@ Workflow 从代码中解耦出来,让 AI 应用支持 Prompt 的热更新、版�
 
 - **后端**:Go + Gin + GORM + SQLite,WebSocket 热更新。
 - **前端**:Vue3 + Vite + Naive UI + Pinia。
-- **SDK**:Node(内置 fetch / WebSocket)、Python(标准库)、Java(java.net.http)。
+- **SDK**:Node(内置 fetch,WebSocket 用 `ws`)、Python(标准库)、Java(java.net.http)。
 - **部署**:单二进制 / Docker。
 
 下一步:[快速上手](./quickstart) · [部署](./deployment)。

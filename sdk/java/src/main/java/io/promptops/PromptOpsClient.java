@@ -28,6 +28,7 @@ public final class PromptOpsClient {
     private final String server;
     private final String namespace;
     private final String token;
+    private final String appName;
     private final HttpClient http = HttpClient.newHttpClient();
     private final Map<String, Prompt> cache = new ConcurrentHashMap<>();
     private volatile WebSocket webSocket;
@@ -37,12 +38,21 @@ public final class PromptOpsClient {
     }
 
     public PromptOpsClient(String server, String namespace, String token) {
+        this(server, namespace, token, "");
+    }
+
+    /**
+     * @param appName optional app name reported to the server's
+     *                connected-clients registry.
+     */
+    public PromptOpsClient(String server, String namespace, String token, String appName) {
         if (server == null || server.isEmpty()) {
             throw new IllegalArgumentException("PromptOps: \"server\" is required");
         }
         this.server = server.replaceAll("/+$", "");
         this.namespace = namespace;
         this.token = token;
+        this.appName = appName == null ? "" : appName;
     }
 
     /** Replace {@code {{variable}}} placeholders; unknown variables stay as-is. */
@@ -106,7 +116,13 @@ public final class PromptOpsClient {
      * appears in a hot-reload event. {@code onUpdate} receives the prompt key.
      */
     public void watch(Consumer<String> onUpdate) {
-        String wsUrl = server.replaceFirst("^http", "ws") + "/ws";
+        // Identify this connection to the server's client registry.
+        String query = "client=java-sdk&namespace="
+                + URLEncoder.encode(namespace, StandardCharsets.UTF_8);
+        if (!appName.isEmpty()) {
+            query += "&app=" + URLEncoder.encode(appName, StandardCharsets.UTF_8);
+        }
+        String wsUrl = server.replaceFirst("^http", "ws") + "/ws?" + query;
         this.webSocket = http.newWebSocketBuilder()
                 .buildAsync(URI.create(wsUrl), new HotReloadListener(onUpdate))
                 .join();

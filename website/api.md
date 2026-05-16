@@ -45,6 +45,7 @@ management requires `admin`; `viewer` may only read and run.
 | GET | `/api/audit` | Audit log |
 | GET | `/api/runs` | Run log |
 | GET | `/api/runs/stats` | Aggregated run metrics |
+| GET | `/api/clients` | Live hot-reload connections (SDKs & browser) |
 | GET / POST / PUT / DELETE | `/api/users` `/api/users/:id` | User management (admin only) |
 | GET / POST / DELETE | `/api/workspaces` `/api/workspaces/:id` | Team workspaces |
 

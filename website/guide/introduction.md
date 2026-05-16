@@ -25,11 +25,11 @@ Core idea:
 |---|---|
 | Prompt Runtime | CRUD, search, categories, multi-environment, version publish & rollback |
 | Hot Reload | Real-time prompt-change push over WebSocket |
-| SDK | Node / Python / Java, with no third-party dependencies |
+| SDK | Node / Python / Java — Python & Java zero-dependency, Node depends only on `ws` |
 | Playground | Fill variables, call models, view results; version diff |
 | Agent | A config-driven prompt + provider + model |
 | Workflow | A render → model → transform step-orchestration engine |
-| Observability | Audit logs, run logs, token & latency stats |
+| Observability | Audit logs, run logs, token & latency stats, live connected clients |
 | RBAC | admin / editor / viewer roles |
 | Gray Release | Weighted A/B version traffic split |
 | Workspace | Resources grouped by team workspace |
@@ -38,7 +38,7 @@ Core idea:
 
 - **Backend**: Go + Gin + GORM + SQLite, with WebSocket hot-reload.
 - **Frontend**: Vue 3 + Vite + Naive UI + Pinia.
-- **SDKs**: Node (built-in fetch / WebSocket), Python (standard library), Java (java.net.http).
+- **SDKs**: Node (built-in fetch, `ws` for WebSocket), Python (standard library), Java (java.net.http).
 - **Deployment**: single binary / Docker.
 
 Next: [Quickstart](./quickstart) · [Deployment](./deployment).

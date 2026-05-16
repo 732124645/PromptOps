@@ -1,3 +1,5 @@
+import WebSocket from 'ws'
+
 const DEFAULT_TOKEN = 'promptops-dev-token'
 const VAR_RE = /{{\s*([\w.]+)\s*}}/g
 
@@ -20,6 +22,7 @@ export class PromptOpsClient {
     this.server = String(options.server).replace(/\/+$/, '')
     this.namespace = options.namespace || 'prod'
     this.token = options.token || DEFAULT_TOKEN
+    this.appName = options.appName || ''
     this.cache = new Map()
     this._listeners = new Map()
     this._ws = null
@@ -66,7 +69,10 @@ export class PromptOpsClient {
    */
   watch() {
     if (this._ws) return this._ws
-    const wsUrl = `${this.server.replace(/^http/, 'ws')}/ws`
+    // Identify this connection to the server's client registry.
+    const params = new URLSearchParams({ client: 'node-sdk', namespace: this.namespace })
+    if (this.appName) params.set('app', this.appName)
+    const wsUrl = `${this.server.replace(/^http/, 'ws')}/ws?${params}`
     const ws = new WebSocket(wsUrl)
     this._ws = ws
     ws.addEventListener('open', () => this._emit('connect'))
@@ -76,9 +82,17 @@ export class PromptOpsClient {
     })
     ws.addEventListener('error', () => this._emit('error', new Error('PromptOps: websocket error')))
     ws.addEventListener('message', async (ev) => {
+      // ev.data is a string on global WebSocket, but a Buffer on the `ws`
+      // package — normalise both to text before parsing.
+      const raw = ev.data
+      let text = ''
+      if (typeof raw === 'string') text = raw
+      else if (Buffer.isBuffer(raw)) text = raw.toString('utf8')
+      else if (raw instanceof ArrayBuffer) text = Buffer.from(raw).toString('utf8')
+      else if (Array.isArray(raw)) text = Buffer.concat(raw).toString('utf8')
       let evt
       try {
-        evt = JSON.parse(typeof ev.data === 'string' ? ev.data : '')
+        evt = JSON.parse(text)
       } catch {
         return
       }

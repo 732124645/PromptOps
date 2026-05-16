@@ -1,3 +1,36 @@
+/* Self-hosted variable fonts (latin subset) — files in web/public/fonts/. */
+@font-face {
+  font-family: 'DM Sans';
+  font-style: normal;
+  font-weight: 100 1000;
+  font-display: swap;
+  src: url('/fonts/dm-sans.woff2') format('woff2');
+}
+@font-face {
+  font-family: 'Space Grotesk';
+  font-style: normal;
+  font-weight: 300 700;
+  font-display: swap;
+  src: url('/fonts/space-grotesk.woff2') format('woff2');
+}
+@font-face {
+  font-family: 'JetBrains Mono';
+  font-style: normal;
+  font-weight: 100 800;
+  font-display: swap;
+  src: url('/fonts/jetbrains-mono.woff2') format('woff2');
+}
+
+:root {
+  --bg-base: #05080f;
+  --accent: #22d3ee;
+  --accent-soft: rgba(34, 211, 238, 0.14);
+  --accent-line: rgba(34, 211, 238, 0.24);
+  --text-dim: #6f8198;
+  --font-heading: 'Space Grotesk', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+  --font-body: 'DM Sans', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+}
+
 * {
   box-sizing: border-box;
 }
@@ -10,15 +43,141 @@ body,
 }
 
 body {
-  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+  font-family: var(--font-body);
+  color: #e6eef7;
+  background-color: var(--bg-base);
+  /* Layered HUD backdrop: corner glows + a faint blueprint grid. */
+  background-image:
+    radial-gradient(ellipse 70% 55% at 50% -8%, rgba(34, 211, 238, 0.16), transparent 60%),
+    radial-gradient(ellipse 50% 45% at 94% 2%, rgba(59, 130, 246, 0.13), transparent 55%),
+    radial-gradient(ellipse 46% 42% at 2% 24%, rgba(129, 90, 247, 0.08), transparent 55%),
+    linear-gradient(rgba(120, 170, 210, 0.035) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(120, 170, 210, 0.035) 1px, transparent 1px);
+  background-size: 100% 100%, 100% 100%, 100% 100%, 46px 46px, 46px 46px;
+  background-attachment: fixed;
+  -webkit-font-smoothing: antialiased;
+}
+
+/* Static CRT scanline overlay — texture only, no animation (an infinite
+   animation here would just distract). pointer-events:none keeps it inert. */
+body::before {
+  content: '';
+  position: fixed;
+  inset: 0;
+  z-index: 9998;
+  pointer-events: none;
+  opacity: 0.4;
+  background: repeating-linear-gradient(
+    0deg,
+    rgba(0, 0, 0, 0.5),
+    rgba(0, 0, 0, 0.5) 1px,
+    transparent 1px,
+    transparent 3px
+  );
 }
 
 .page {
-  max-width: 1080px;
+  max-width: 1100px;
   margin: 0 auto;
-  padding: 24px 16px;
+  padding: 28px 18px 64px;
+  animation: page-in 0.4s cubic-bezier(0.16, 1, 0.3, 1) both;
 }
 
-.mono {
+@keyframes page-in {
+  from {
+    opacity: 0;
+    transform: translateY(8px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.page h2 {
+  margin: 0;
+  font-family: var(--font-heading);
+  font-size: 22px;
+  font-weight: 600;
+  letter-spacing: 0.005em;
+  background: linear-gradient(180deg, #ffffff 28%, #92d6e5);
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+}
+
+.mono,
+code {
   font-family: 'JetBrains Mono', 'SF Mono', Menlo, Consolas, monospace;
+}
+
+::selection {
+  background: rgba(34, 211, 238, 0.32);
+  color: #ffffff;
+}
+
+/* --- scrollbar --- */
+::-webkit-scrollbar {
+  width: 10px;
+  height: 10px;
+}
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+::-webkit-scrollbar-thumb {
+  background: rgba(34, 211, 238, 0.22);
+  border-radius: 8px;
+  border: 2px solid transparent;
+  background-clip: padding-box;
+}
+::-webkit-scrollbar-thumb:hover {
+  background: rgba(34, 211, 238, 0.44);
+  background-clip: padding-box;
+}
+
+/* --- naive-ui surface polish (global, applies across every view) --- */
+.n-card {
+  backdrop-filter: blur(14px);
+  -webkit-backdrop-filter: blur(14px);
+  box-shadow: 0 10px 44px -16px rgba(0, 0, 0, 0.72);
+  transition:
+    border-color 0.2s ease,
+    box-shadow 0.2s ease;
+}
+.n-card:hover {
+  border-color: var(--accent-line) !important;
+  box-shadow:
+    0 12px 52px -14px rgba(0, 0, 0, 0.82),
+    0 0 0 1px rgba(34, 211, 238, 0.09);
+}
+
+/* tables — uppercase HUD-style headers, glow on row hover */
+.n-table thead th {
+  background: rgba(34, 211, 238, 0.06) !important;
+  text-transform: uppercase;
+  letter-spacing: 0.07em;
+  font-size: 11px;
+  font-weight: 600;
+  color: #74c8db !important;
+}
+.n-table tbody tr {
+  transition: background 0.15s ease;
+}
+.n-table tbody tr:hover td {
+  background: rgba(34, 211, 238, 0.045) !important;
+}
+
+/* primary buttons get a cyan glow */
+.n-button--primary-type {
+  box-shadow: 0 0 18px -6px rgba(34, 211, 238, 0.6);
+}
+.n-button--primary-type:hover {
+  box-shadow: 0 0 26px -4px rgba(34, 211, 238, 0.78);
+}
+
+/* frosted-glass utility used by the app shell */
+.glass {
+  background: rgba(9, 14, 27, 0.74);
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
 }

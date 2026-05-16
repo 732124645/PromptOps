@@ -1,3 +1,5 @@
+import type { WebSocket } from 'ws'
+
 export interface Prompt {
   key: string
   version: string
@@ -13,6 +15,8 @@ export interface PromptOpsClientOptions {
   namespace?: string
   /** Bearer token. Defaults to "promptops-dev-token". */
   token?: string
+  /** Optional app name reported to the server's connected-clients registry. */
+  appName?: string
 }
 
 export interface UpdateEvent {

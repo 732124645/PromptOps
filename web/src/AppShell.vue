@@ -142,6 +142,35 @@ watch(
         </nav>
       </div>
       <div class="right">
+        <a
+          class="ext-link"
+          href="https://github.com/732124645/PromptOps"
+          target="_blank"
+          rel="noopener noreferrer"
+          title="GitHub"
+        >
+          <svg viewBox="0 0 24 24" width="17" height="17" aria-hidden="true">
+            <path
+              fill="currentColor"
+              d="M12 .5C5.37.5 0 5.78 0 12.29c0 5.2 3.44 9.6 8.21 11.16.6.11.82-.25.82-.56 0-.28-.01-1.02-.02-2-3.34.71-4.04-1.58-4.04-1.58-.55-1.37-1.34-1.73-1.34-1.73-1.09-.73.08-.72.08-.72 1.2.08 1.84 1.21 1.84 1.21 1.07 1.8 2.81 1.28 3.5.98.11-.76.42-1.28.76-1.58-2.67-.3-5.47-1.31-5.47-5.83 0-1.29.47-2.34 1.24-3.17-.13-.3-.54-1.52.12-3.16 0 0 1.01-.32 3.3 1.21a11.6 11.6 0 0 1 6 0c2.29-1.53 3.3-1.21 3.3-1.21.66 1.64.25 2.86.12 3.16.77.83 1.23 1.88 1.23 3.17 0 4.53-2.8 5.52-5.48 5.82.43.36.81 1.08.81 2.18 0 1.58-.01 2.85-.01 3.24 0 .31.21.68.83.56A12.04 12.04 0 0 0 24 12.29C24 5.78 18.63.5 12 .5Z"
+            />
+          </svg>
+        </a>
+        <a
+          class="ext-link"
+          href="https://732124645.github.io/PromptOps/"
+          target="_blank"
+          rel="noopener noreferrer"
+          title="Docs"
+        >
+          <svg viewBox="0 0 24 24" width="17" height="17" aria-hidden="true">
+            <path
+              fill="currentColor"
+              d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8l-6-6Zm0 2 4 4h-4V4ZM8 13h8v1.6H8V13Zm0 3.4h8V18H8v-1.6Z"
+            />
+          </svg>
+        </a>
+        <span class="divider" />
         <n-select
           :value="locale"
           :options="localeOptions"
@@ -197,52 +226,103 @@ watch(
   display: flex;
   align-items: center;
   justify-content: space-between;
-  height: 56px;
-  padding: 0 24px;
+  height: 60px;
+  padding: 0 26px;
+  background: rgba(7, 11, 22, 0.8);
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+  border-bottom: 1px solid rgba(34, 211, 238, 0.16);
+  box-shadow: 0 1px 24px -6px rgba(34, 211, 238, 0.3);
 }
 .left {
   display: flex;
   align-items: center;
-  gap: 28px;
+  gap: 26px;
 }
 .brand {
+  display: flex;
+  align-items: center;
+  font-family: 'Space Grotesk', sans-serif;
   font-weight: 700;
-  font-size: 18px;
+  font-size: 19px;
+  letter-spacing: 0.02em;
+  color: #ffffff;
   cursor: pointer;
+  text-shadow: 0 0 20px rgba(34, 211, 238, 0.45);
 }
 .nav {
   display: flex;
-  gap: 18px;
+  gap: 4px;
 }
 .nav a {
+  position: relative;
   cursor: pointer;
-  font-size: 14px;
-  color: #999;
-  transition: color 0.15s;
+  font-size: 13.5px;
+  font-weight: 500;
+  color: #8493a8;
+  padding: 7px 12px;
+  border-radius: 7px;
+  transition:
+    color 0.16s ease,
+    background 0.16s ease;
 }
 .nav a:hover {
-  color: #fff;
+  color: #d8edf2;
+  background: rgba(34, 211, 238, 0.07);
 }
 .nav a.active {
-  color: #63e2b7;
+  color: #22d3ee;
+}
+.nav a.active::after {
+  content: '';
+  position: absolute;
+  left: 12px;
+  right: 12px;
+  bottom: -1px;
+  height: 2px;
+  border-radius: 2px;
+  background: #22d3ee;
+  box-shadow: 0 0 10px rgba(34, 211, 238, 0.95);
 }
 .right {
   display: flex;
   align-items: center;
   gap: 10px;
 }
+.ext-link {
+  display: flex;
+  align-items: center;
+  color: #8493a8;
+  cursor: pointer;
+  transition:
+    color 0.16s ease,
+    filter 0.16s ease;
+}
+.ext-link:hover {
+  color: #22d3ee;
+  filter: drop-shadow(0 0 6px rgba(34, 211, 238, 0.7));
+}
+.divider {
+  width: 1px;
+  height: 18px;
+  margin: 0 2px;
+  background: rgba(120, 160, 200, 0.22);
+}
 .who {
   font-size: 13px;
-  color: #aaa;
+  color: #93a3b8;
 }
 .tag {
-  font-size: 11px;
-  font-weight: 500;
-  margin-left: 6px;
-  padding: 2px 6px;
-  border-radius: 4px;
-  background: rgba(99, 226, 183, 0.15);
-  color: #63e2b7;
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 0.11em;
+  text-transform: uppercase;
+  margin-left: 9px;
+  padding: 3px 7px;
+  border-radius: 5px;
+  background: rgba(34, 211, 238, 0.12);
+  border: 1px solid rgba(34, 211, 238, 0.32);
+  color: #22d3ee;
 }
 .ws-row {
   display: flex;
