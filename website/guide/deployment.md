@@ -1,17 +1,18 @@
-# 部署
+# Deployment
 
 ## Docker Compose
 
-仓库根目录提供了 `Dockerfile`(多阶段:构建前端 → 构建后端 → 运行镜像)与
-`docker-compose.yml`。一条命令即可构建并启动:
+The repository root ships a `Dockerfile` (multi-stage: build frontend → build
+backend → runtime image) and a `docker-compose.yml`. One command builds and
+starts everything:
 
 ```bash
 docker compose up --build
 ```
 
-启动后访问 `http://localhost:8080` —— Go 服务端会同时托管已构建的 Web UI。
+Then open `http://localhost:8080` — the Go server also serves the built Web UI.
 
-`docker-compose.yml` 默认配置:
+Default `docker-compose.yml`:
 
 ```yaml
 services:
@@ -26,22 +27,25 @@ services:
       - ./data:/app/data
 ```
 
-数据通过挂载的 `./data` 卷持久化。
+Data is persisted through the mounted `./data` volume.
 
-## 单二进制部署
+## Single-binary deployment
 
-后端使用纯 Go 的 SQLite 驱动,可在禁用 CGO 的情况下编译为单文件:
+The backend uses a pure-Go SQLite driver, so it can be compiled to a single
+file with CGO disabled:
 
 ```bash
-cd web && npm install && npm run build      # 产出 web/dist
+cd web && npm install && npm run build      # produces web/dist
 cd ../server && CGO_ENABLED=0 go build -o promptops .
 ```
 
-将 `promptops` 二进制与 `web/dist` 一起部署即可。若运行目录下存在
-`web/dist/index.html`,服务端会自动托管前端。
+Deploy the `promptops` binary together with `web/dist`. If
+`web/dist/index.html` exists in the working directory, the server serves the
+frontend automatically.
 
-## 生产建议
+## Production notes
 
-- 通过 `PROMPTOPS_TOKEN` 设置一个强随机的管理员 Token。
-- 首次启动会自动创建 `admin` / `admin` 账号,请尽快在「用户管理」中修改。
-- 将 SQLite 文件放在持久化卷上并定期备份。
+- Set a strong random admin token via `PROMPTOPS_TOKEN`.
+- A default `admin` / `admin` account is created on first run — change it in
+  "User Management" as soon as possible.
+- Put the SQLite file on a persistent volume and back it up regularly.

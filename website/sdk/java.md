@@ -1,9 +1,9 @@
 # Java SDK
 
-纯 JDK 实现,使用 `java.net.http`(HttpClient + WebSocket),自带一个最小
-JSON 解析器。源码位于 `sdk/java`,需要 Java 21+。
+Pure JDK — uses `java.net.http` (HttpClient + WebSocket) with a small built-in
+JSON parser. Source lives in `sdk/java`; requires Java 21+.
 
-## 用法
+## Usage
 
 ```java
 import io.promptops.PromptOpsClient;
@@ -12,24 +12,25 @@ import java.util.Map;
 PromptOpsClient client = new PromptOpsClient(
     "http://localhost:8080", "prod", "promptops-dev-token");
 
-// 按 key 获取 Prompt(带本地缓存)
+// Fetch a prompt by key (locally cached)
 var prompt = client.getPrompt("sql.generator");
 
-// 渲染模板变量
-String text = client.render("sql.generator", Map.of("question", "查询所有用户"));
+// Render template variables
+String text = client.render("sql.generator", Map.of("question", "list all users"));
 
-// 订阅热更新
-client.watch(key -> System.out.println("已热更新: " + key));
+// Subscribe to hot-reload
+client.watch(key -> System.out.println("hot-reloaded: " + key));
 ```
 
 ## API
 
-| 方法 | 说明 |
+| Method | Description |
 |---|---|
-| `new PromptOpsClient(server[, namespace, token])` | 创建客户端 |
-| `getPrompt(key[, refresh])` | 获取 Prompt,默认走缓存 |
-| `render(key, variables)` | 获取并渲染 `{{变量}}` |
-| `watch(onUpdate)` | 打开 WebSocket,自动刷新缓存 |
-| `close()` | 关闭连接 |
+| `new PromptOpsClient(server[, namespace, token])` | Create a client |
+| `getPrompt(key[, refresh])` | Fetch a prompt; cached by default |
+| `render(key, variables)` | Fetch and render `{{variables}}` |
+| `watch(onUpdate)` | Open the WebSocket and auto-refresh the cache |
+| `close()` | Close the connection |
 
-`PromptOpsClient.renderTemplate(content, variables)` 是可直接调用的静态方法。
+`PromptOpsClient.renderTemplate(content, variables)` is a static method you can
+call directly.

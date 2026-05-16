@@ -1,8 +1,9 @@
 # Node SDK
 
-零依赖,使用 Node 22+ 内置的 `fetch` 与 `WebSocket`。源码位于 `sdk/node`。
+Zero dependencies — uses the `fetch` and `WebSocket` globals built into
+Node 22+. Source lives in `sdk/node`.
 
-## 用法
+## Usage
 
 ```js
 import { PromptOpsClient } from '@promptops/client'
@@ -13,26 +14,26 @@ const client = new PromptOpsClient({
   token: 'promptops-dev-token',
 })
 
-// 按 key 获取 Prompt(带本地缓存)
+// Fetch a prompt by key (locally cached)
 const prompt = await client.getPrompt('sql.generator')
 
-// 渲染模板变量
-const text = await client.render('sql.generator', { question: '查询所有用户' })
+// Render template variables
+const text = await client.render('sql.generator', { question: 'list all users' })
 
-// 订阅热更新:Prompt 在后端变更后自动刷新缓存
-client.on('update', (e) => console.log('已热更新:', e.key))
+// Subscribe to hot-reload: the cache refreshes when the prompt changes
+client.on('update', (e) => console.log('hot-reloaded:', e.key))
 client.watch()
 ```
 
 ## API
 
-| 方法 | 说明 |
+| Method | Description |
 |---|---|
-| `new PromptOpsClient({ server, namespace?, token? })` | 创建客户端 |
-| `getPrompt(key, { refresh? })` | 获取 Prompt,默认走缓存 |
-| `render(key, vars)` | 获取并渲染 `{{变量}}` |
-| `on(event, cb)` | 监听 `update` / `connect` / `disconnect` / `error` |
-| `watch()` | 打开 WebSocket,自动刷新缓存 |
-| `close()` | 关闭连接 |
+| `new PromptOpsClient({ server, namespace?, token? })` | Create a client |
+| `getPrompt(key, { refresh? })` | Fetch a prompt; cached by default |
+| `render(key, vars)` | Fetch and render `{{variables}}` |
+| `on(event, cb)` | Listen for `update` / `connect` / `disconnect` / `error` |
+| `watch()` | Open the WebSocket and auto-refresh the cache |
+| `close()` | Close the connection |
 
-`renderTemplate(content, vars)` 也可单独导出使用。
+`renderTemplate(content, vars)` is also exported for standalone use.

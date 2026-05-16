@@ -1,8 +1,9 @@
 # Python SDK
 
-纯标准库实现,内含一个最小 WebSocket 客户端。源码位于 `sdk/python`。
+Pure standard library, including a minimal WebSocket client. Source lives in
+`sdk/python`.
 
-## 用法
+## Usage
 
 ```python
 from promptops import PromptOpsClient
@@ -13,24 +14,24 @@ client = PromptOpsClient(
     token="promptops-dev-token",
 )
 
-# 按 key 获取 Prompt(带本地缓存)
+# Fetch a prompt by key (locally cached)
 prompt = client.get_prompt("sql.generator")
 
-# 渲染模板变量
-text = client.render("sql.generator", {"question": "查询所有用户"})
+# Render template variables
+text = client.render("sql.generator", {"question": "list all users"})
 
-# 订阅热更新
-client.watch(on_update=lambda e: print("已热更新:", e["key"]))
+# Subscribe to hot-reload
+client.watch(on_update=lambda e: print("hot-reloaded:", e["key"]))
 ```
 
 ## API
 
-| 方法 | 说明 |
+| Method | Description |
 |---|---|
-| `PromptOpsClient(server, namespace="prod", token=...)` | 创建客户端 |
-| `get_prompt(key, refresh=False)` | 获取 Prompt,默认走缓存 |
-| `render(key, variables)` | 获取并渲染 `{{变量}}` |
-| `watch(on_update=...)` | 后台线程连接 WebSocket,自动刷新缓存 |
-| `close()` | 关闭连接 |
+| `PromptOpsClient(server, namespace="prod", token=...)` | Create a client |
+| `get_prompt(key, refresh=False)` | Fetch a prompt; cached by default |
+| `render(key, variables)` | Fetch and render `{{variables}}` |
+| `watch(on_update=...)` | Connect the WebSocket in a background thread |
+| `close()` | Close the connection |
 
-`render_template(content, variables)` 也可单独导入使用。
+`render_template(content, variables)` can also be imported standalone.

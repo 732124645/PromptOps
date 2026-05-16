@@ -3,14 +3,14 @@ layout: home
 
 hero:
   name: PromptOps
-  text: AI Prompt Runtime 平台
-  tagline: 把 Prompt、Agent、Workflow 从代码中解耦 —— 支持热更新、版本管理、灰度发布与运行时观测。
+  text: AI Prompt Runtime Platform
+  tagline: Decouple prompts, agents and workflows from code — with hot-reload, version control, gray releases and runtime observability.
   actions:
     - theme: brand
-      text: 快速上手
+      text: Quickstart
       link: /guide/quickstart
     - theme: alt
-      text: 项目介绍
+      text: Introduction
       link: /guide/introduction
     - theme: alt
       text: GitHub
@@ -18,19 +18,19 @@ hero:
 
 features:
   - title: Prompt Runtime
-    details: Prompt 作为可工程化管理的资源 —— CRUD、搜索、分类、多环境(dev / test / prod)与版本管理。
-  - title: 热更新
-    details: 基于 WebSocket,Prompt 变更实时推送到已连接的 SDK,AI 服务无需重启即可生效。
-  - title: 三语言 SDK
-    details: Node、Python、Java 三个零依赖 SDK,按 key 获取 Prompt、渲染模板变量、订阅热更新。
+    details: Prompts as engineering-managed resources — CRUD, search, categories, multiple environments (dev / test / prod) and version control.
+  - title: Hot Reload
+    details: Over WebSocket, prompt changes are pushed to connected SDKs in real time — no AI-service restart required.
+  - title: Three SDKs
+    details: Zero-dependency Node, Python and Java SDKs — fetch prompts by key, render template variables, subscribe to hot-reload.
   - title: Playground
-    details: 填入变量、调用模型(OpenAI / Claude / Ollama / Gemini / mock)、即时查看渲染结果与输出。
-  - title: Agent 与 Workflow
-    details: 配置化 Agent(Prompt + 提供方 + 模型);Workflow 步骤引擎串联 render → model → transform。
-  - title: 灰度发布
-    details: 按 key + 环境的 AB 流量切分,SDK 获取 Prompt 时按权重返回两个版本之一。
-  - title: 可观测性与审计
-    details: 记录所有变更与模型调用,聚合运行次数、Token 估算与延迟指标。
-  - title: 权限与团队空间
-    details: admin / editor / viewer 三级 RBAC;资源按 Workspace 团队空间归组。
+    details: Fill in variables, call a model (OpenAI / Claude / Ollama / Gemini / mock) and instantly see the rendered prompt and output.
+  - title: Agents & Workflows
+    details: Config-driven agents (prompt + provider + model); a workflow engine chaining render → model → transform steps.
+  - title: Gray Release
+    details: Weighted A/B traffic split per key + environment — the SDK returns one of two versions by weight.
+  - title: Observability & Audit
+    details: Every mutation and model call is logged; run counts, token estimates and latency are aggregated.
+  - title: Roles & Workspaces
+    details: Three-tier RBAC (admin / editor / viewer); resources grouped into team workspaces.
 ---

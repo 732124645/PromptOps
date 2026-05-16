@@ -1,11 +1,11 @@
-# 快速上手
+# Quickstart
 
-## 环境要求
+## Requirements
 
 - Go 1.24+
 - Node.js 22+
 
-## 启动后端
+## Start the backend
 
 ```bash
 cd server
@@ -13,17 +13,18 @@ go mod tidy
 go run .
 ```
 
-后端默认监听 `:8080`,SQLite 数据库位于 `server/data/promptops.db`。
+The backend listens on `:8080` by default; the SQLite database lives at
+`server/data/promptops.db`.
 
-可配置的环境变量:
+Environment variables:
 
-| 变量 | 默认值 | 说明 |
+| Variable | Default | Description |
 |---|---|---|
-| `PROMPTOPS_ADDR` | `:8080` | 监听地址 |
-| `PROMPTOPS_DB` | `data/promptops.db` | SQLite 文件路径 |
-| `PROMPTOPS_TOKEN` | `promptops-dev-token` | 静态管理员 Token |
+| `PROMPTOPS_ADDR` | `:8080` | Listen address |
+| `PROMPTOPS_DB` | `data/promptops.db` | SQLite file path |
+| `PROMPTOPS_TOKEN` | `promptops-dev-token` | Static admin token |
 
-## 启动前端
+## Start the frontend
 
 ```bash
 cd web
@@ -31,21 +32,22 @@ npm install
 npm run dev
 ```
 
-打开 `http://localhost:5173`,默认管理员账号 `admin` / `admin`。
+Open `http://localhost:5173`. The default admin account is `admin` / `admin`.
 
-## 创建第一个 Prompt
+## Create your first prompt
 
-1. 登录后进入 **Prompts** 页面,点击「新建 Prompt」。
-2. 填写 `key`(例如 `sql.generator`)、环境、内容,内容里可用 `{{变量}}` 占位符。
-3. 保存后点击「发布版本」生成一个不可变快照。
+1. After logging in, open the **Prompts** page and click "New Prompt".
+2. Fill in a `key` (e.g. `sql.generator`), an environment and the content;
+   the content can use `{{variable}}` placeholders.
+3. Save, then click "Publish" to create an immutable version snapshot.
 
-## 在 Playground 试运行
+## Try it in the Playground
 
-进入 **Playground**,选择刚创建的 Prompt,填入变量值,选择模型提供方
-(`mock` 无需 API Key,可离线试跑),点击「运行」即可看到渲染后的 Prompt
-与模型输出。
+Open the **Playground**, pick the prompt you created, fill in variable values,
+choose a model provider (`mock` needs no API key and runs offline), and click
+"Run" to see the rendered prompt and the model output.
 
-## 用 SDK 取用
+## Use it from an SDK
 
 ```js
 import { PromptOpsClient } from '@promptops/client'
@@ -55,10 +57,10 @@ const client = new PromptOpsClient({
   namespace: 'prod',
 })
 
-const text = await client.render('sql.generator', { question: '查询所有用户' })
+const text = await client.render('sql.generator', { question: 'list all users' })
 
-client.on('update', (e) => console.log('prompt 已热更新:', e.key))
+client.on('update', (e) => console.log('prompt hot-reloaded:', e.key))
 client.watch()
 ```
 
-更多见 [SDK 文档](/sdk/node) 与 [API 参考](/api)。
+See the [SDK docs](/sdk/node) and the [API reference](/api) for more.
