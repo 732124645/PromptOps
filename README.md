@@ -2,6 +2,12 @@
 
 English | [简体中文](README.zh-CN.md)
 
+[![License](https://img.shields.io/github/license/732124645/PromptOps?color=blue)](LICENSE)
+[![Release](https://img.shields.io/github/v/release/732124645/PromptOps?include_prereleases&label=release)](https://github.com/732124645/PromptOps/releases)
+[![CI](https://github.com/732124645/PromptOps/actions/workflows/ci.yml/badge.svg?branch=main)](https://github.com/732124645/PromptOps/actions/workflows/ci.yml)
+[![Docs](https://github.com/732124645/PromptOps/actions/workflows/docs.yml/badge.svg?branch=main)](https://732124645.github.io/PromptOps/)
+[![Stars](https://img.shields.io/github/stars/732124645/PromptOps?style=social)](https://github.com/732124645/PromptOps/stargazers)
+
 Open-source runtime platform for AI prompts, agents, and workflows.
 
 > **Stop hardcoding prompts in your application.**
@@ -179,3 +185,7 @@ is built and published by `.github/workflows/docs.yml`.
 The full design document is at [docs/PromptOps.md](docs/PromptOps.md), covering
 positioning, core concepts, MVP scope, architecture, database and API design,
 SDKs, hot-reload, deployment and the roadmap.
+
+## Star History
+
+[![Star History Chart](https://api.star-history.com/svg?repos=732124645/PromptOps&type=Date)](https://star-history.com/#732124645/PromptOps&Date)

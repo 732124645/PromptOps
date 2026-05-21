@@ -2,6 +2,12 @@
 
 [English](README.md) | 简体中文
 
+[![License](https://img.shields.io/github/license/732124645/PromptOps?color=blue)](LICENSE)
+[![Release](https://img.shields.io/github/v/release/732124645/PromptOps?include_prereleases&label=release)](https://github.com/732124645/PromptOps/releases)
+[![CI](https://github.com/732124645/PromptOps/actions/workflows/ci.yml/badge.svg?branch=main)](https://github.com/732124645/PromptOps/actions/workflows/ci.yml)
+[![Docs](https://github.com/732124645/PromptOps/actions/workflows/docs.yml/badge.svg?branch=main)](https://732124645.github.io/PromptOps/)
+[![Stars](https://img.shields.io/github/stars/732124645/PromptOps?style=social)](https://github.com/732124645/PromptOps/stargazers)
+
 面向 AI 应用的开源 Prompt、Agent、Workflow 运行时平台。
 
 > **不要再把 Prompt 写死在代码里。**
@@ -158,3 +164,7 @@ client.watch()
 完整的项目设计文档见 [docs/PromptOps.md](docs/PromptOps.md),涵盖项目定位、
 核心概念、MVP 范围、技术架构、数据库与 API 设计、SDK、热更新方案、部署以及
 路线图规划。
+
+## Star History
+
+[![Star History Chart](https://api.star-history.com/svg?repos=732124645/PromptOps&type=Date)](https://star-history.com/#732124645/PromptOps&Date)
