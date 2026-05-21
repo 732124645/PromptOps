@@ -4,11 +4,32 @@ English | [简体中文](README.zh-CN.md)
 
 Open-source runtime platform for AI prompts, agents, and workflows.
 
+> **Stop hardcoding prompts in your application.**
+
 PromptOps is a **Prompt Runtime platform** for AI applications. It decouples
 prompts, agents and workflows from code, so AI applications can hot-reload,
 version, publish, gray-release and observe their prompts at runtime.
 
 Core idea: **Build → Version → Deploy → Runtime → Observe** prompts.
+
+## Security Notice
+
+The defaults below are intentionally easy so `docker compose up` works out of
+the box for local development. **Do not run a default-configured PromptOps
+instance on the public internet.**
+
+Before any production deployment, change at minimum:
+
+- The static token `PROMPTOPS_TOKEN` (default `promptops-dev-token`) — replace
+  with a high-entropy secret
+- The seeded `admin` / `admin` account password (log in once, then change it
+  in the Web UI)
+- Terminate TLS at a reverse proxy (Nginx / Caddy) in front of `:8080`
+- Restrict CORS and admin-UI access to trusted hosts / networks
+- Mount the SQLite file on a persistent, backed-up volume
+
+The full hardening checklist and vulnerability-reporting process live in
+[`SECURITY.md`](SECURITY.md).
 
 ## Status
 
@@ -127,6 +148,20 @@ const text = await client.render('sql.generator', { question: 'list all users' }
 client.on('update', (e) => console.log('prompt hot-reloaded:', e.key))
 client.watch()
 ```
+
+## Examples
+
+End-to-end runnable demos live under [`examples/`](examples/):
+
+- [`examples/node-hot-reload`](examples/node-hot-reload) — minimal Node
+  consumer that fetches a prompt every few seconds and reflects edits made
+  in the Web UI without restarting
+- [`examples/sql-agent`](examples/sql-agent) — natural-language → SQL agent
+  showing how to change generation rules at runtime by editing the prompt
+  (uses the built-in `mock` provider, so no API key is required)
+
+See [`examples/README.md`](examples/README.md) for the full list and
+contribution ideas.
 
 ## CI
 

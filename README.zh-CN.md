@@ -4,11 +4,29 @@
 
 面向 AI 应用的开源 Prompt、Agent、Workflow 运行时平台。
 
+> **不要再把 Prompt 写死在代码里。**
+
 PromptOps 是一个面向 AI 应用的 **Prompt Runtime 平台**。它将 Prompt、Agent、
 Workflow 从代码中解耦出来,让 AI 应用支持 Prompt 的热更新、版本管理、发布、
 灰度与运行时观测。
 
 核心能力:**Build → Version → Deploy → Runtime → Observe** Prompt。
+
+## 安全提醒
+
+下面的默认值是有意做得"开箱即用",让 `docker compose up` 在本地能直接跑通。
+**请不要把默认配置的 PromptOps 实例直接暴露到公网。**
+
+正式部署前,至少要改这些:
+
+- 静态 Token `PROMPTOPS_TOKEN`(默认 `promptops-dev-token`)—— 换成一个
+  足够长的随机串
+- 种子账号 `admin` / `admin` 的密码(登录一次,然后在 Web UI 里改掉)
+- 在 `:8080` 前面挂一层反向代理(Nginx / Caddy)做 HTTPS 终结
+- 限制 CORS 与管理后台的访问来源
+- 将 SQLite 文件挂载到有持久化与备份的卷上
+
+完整的生产硬化清单与漏洞上报流程见 [`SECURITY.md`](SECURITY.md)。
 
 ## 当前进度
 

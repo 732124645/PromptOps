@@ -1,0 +1,18 @@
+{
+  "name": "promptops-example-node-hot-reload",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "description": "Minimal Node.js example that fetches a PromptOps prompt and reflects edits via WebSocket hot-reload, without restarting.",
+  "main": "index.mjs",
+  "scripts": {
+    "start": "node index.mjs"
+  },
+  "dependencies": {
+    "@promptops/client": "file:../../sdk/node"
+  },
+  "engines": {
+    "node": ">=18"
+  },
+  "license": "Apache-2.0"
+}

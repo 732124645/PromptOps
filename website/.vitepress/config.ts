@@ -22,6 +22,10 @@ export default defineConfig({
           { text: 'Features', link: '/features/prompts' },
           { text: 'SDK', link: '/sdk/node' },
           { text: 'API', link: '/api' },
+          {
+            text: 'Examples',
+            link: 'https://github.com/732124645/PromptOps/tree/main/examples',
+          },
         ],
         sidebar: {
           '/guide/': [
@@ -78,6 +82,10 @@ export default defineConfig({
           { text: '功能', link: '/zh/features/prompts' },
           { text: 'SDK', link: '/zh/sdk/node' },
           { text: 'API', link: '/zh/api' },
+          {
+            text: '示例',
+            link: 'https://github.com/732124645/PromptOps/tree/main/examples',
+          },
         ],
         sidebar: {
           '/zh/guide/': [
